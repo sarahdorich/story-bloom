@@ -11,61 +11,83 @@ interface IllustrationPickerProps {
   selectedIllustration: CustomIllustration | null;
 }
 
-// Compress image using canvas
+// Compress image using canvas - optimized for mobile compatibility
 async function compressImage(
   file: File,
-  maxWidth: number = 1200,
-  quality: number = 0.8
+  maxDimension: number = 1024,
+  targetMaxSizeKB: number = 500
 ): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
+    // Use URL.createObjectURL for better memory handling on mobile Safari
+    const objectUrl = URL.createObjectURL(file);
+
     img.onload = () => {
       let { width, height } = img;
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
+
+      // Scale down if either dimension exceeds max
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
       }
 
       canvas.width = width;
       canvas.height = height;
 
       if (!ctx) {
+        URL.revokeObjectURL(objectUrl);
         reject(new Error('Could not get canvas context'));
         return;
       }
 
       ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
 
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error('Could not compress image'));
-            return;
-          }
+      // Try progressively lower quality until we hit target size
+      const tryCompress = (quality: number) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Could not compress image'));
+              return;
+            }
 
-          const compressedFile = new File([blob], file.name, {
-            type: 'image/jpeg',
-            lastModified: Date.now(),
-          });
+            // If still too large and quality can be reduced, try again
+            const sizeKB = blob.size / 1024;
+            if (sizeKB > targetMaxSizeKB && quality > 0.3) {
+              tryCompress(quality - 0.1);
+              return;
+            }
 
-          resolve(compressedFile);
-        },
-        'image/jpeg',
-        quality
-      );
+            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+
+            resolve(compressedFile);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+
+      tryCompress(0.85);
     };
 
-    img.onerror = () => reject(new Error('Could not load image'));
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      img.src = e.target?.result as string;
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Could not load image'));
     };
-    reader.onerror = () => reject(new Error('Could not read file'));
-    reader.readAsDataURL(file);
+
+    img.src = objectUrl;
   });
 }
 
