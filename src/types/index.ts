@@ -6,6 +6,7 @@ export interface Child {
   reading_level: string;
   favorite_things: string[];
   parent_summary: string | null;
+  default_text_size: FontSize;
   created_at: string;
 }
 

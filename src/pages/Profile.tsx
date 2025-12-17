@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { useChild } from '../context/ChildContext';
 import { Button, Input, Select, TextArea, TagInput, Card } from '../components/ui';
-import { READING_LEVELS, type Child, type ReadingLevel } from '../types';
+import { READING_LEVELS, type Child, type ReadingLevel, type FontSize } from '../types';
 
 export function Profile() {
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ export function Profile() {
   const [readingLevel, setReadingLevel] = useState<ReadingLevel>(READING_LEVELS[1]);
   const [favoriteThings, setFavoriteThings] = useState<string[]>([]);
   const [parentSummary, setParentSummary] = useState('');
+  const [defaultTextSize, setDefaultTextSize] = useState<FontSize>('medium');
 
   const resetForm = () => {
     setName('');
@@ -27,6 +28,7 @@ export function Profile() {
     setReadingLevel(READING_LEVELS[1]);
     setFavoriteThings([]);
     setParentSummary('');
+    setDefaultTextSize('medium');
     setError('');
   };
 
@@ -37,6 +39,7 @@ export function Profile() {
     setReadingLevel(child.reading_level as ReadingLevel);
     setFavoriteThings(child.favorite_things);
     setParentSummary(child.parent_summary || '');
+    setDefaultTextSize(child.default_text_size);
     setIsCreating(false);
   };
 
@@ -75,6 +78,7 @@ export function Profile() {
       reading_level: readingLevel,
       favorite_things: favoriteThings,
       parent_summary: parentSummary.trim() || null,
+      default_text_size: defaultTextSize,
     };
 
     if (isCreating) {
@@ -164,6 +168,19 @@ export function Profile() {
                 value={readingLevel}
                 onChange={(e) => setReadingLevel(e.target.value as ReadingLevel)}
                 options={READING_LEVELS.map(level => ({ value: level, label: level }))}
+              />
+
+              <Select
+                label="Default Text Size"
+                value={defaultTextSize}
+                onChange={(e) => setDefaultTextSize(e.target.value as FontSize)}
+                options={[
+                  { value: 'small', label: 'Small (A)' },
+                  { value: 'medium', label: 'Medium (A+)' },
+                  { value: 'large', label: 'Large (A++)' },
+                  { value: 'extra-large', label: 'Extra Large (A+++)' },
+                ]}
+                helperText="Choose the default text size for displaying stories"
               />
 
               <TagInput
