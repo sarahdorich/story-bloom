@@ -153,7 +153,14 @@ Please write a story that:
 
 Provide exactly 1 illustration description for the most exciting moment in the story. The position should be the character index in the story content where the illustration should appear (typically near the middle or climax).
 
-IMPORTANT: Respond ONLY with valid JSON in this exact format, no additional text:
+CRITICAL JSON OUTPUT REQUIREMENTS:
+- You MUST respond with ONLY valid JSON, nothing else
+- Do NOT include any text before or after the JSON
+- Do NOT include markdown code blocks or backticks
+- Do NOT include explanations or commentary
+- Your entire response must be parseable as JSON
+
+Respond in this exact JSON format:
 {
   "title": "Short Title Here",
   "content": "Full story text here...",
@@ -165,12 +172,53 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format, no additional text
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
+      temperature: 1,
       messages: [
         {
           role: 'user',
           content: prompt,
         },
       ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'story_response',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              title: {
+                type: 'string',
+                description: 'The title of the story'
+              },
+              content: {
+                type: 'string',
+                description: 'The full story text'
+              },
+              illustrations: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    description: {
+                      type: 'string',
+                      description: 'A detailed scene description for illustration'
+                    },
+                    position: {
+                      type: 'number',
+                      description: 'Character index where the illustration should appear'
+                    }
+                  },
+                  required: ['description', 'position'],
+                  additionalProperties: false
+                }
+              }
+            },
+            required: ['title', 'content', 'illustrations'],
+            additionalProperties: false
+          }
+        }
+      }
     });
 
     const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
