@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button, Input, Card } from '../components/ui';
@@ -13,12 +13,18 @@ export function Auth({ mode }: AuthProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as { from?: string })?.from || '/dashboard';
+
+  useEffect(() => {
+    setSignupSuccess(false);
+    setError('');
+  }, [mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +50,7 @@ export function Auth({ mode }: AuthProps) {
       if (error) {
         setError(error.message);
       } else if (mode === 'signup') {
-        navigate('/onboarding');
+        setSignupSuccess(true);
       } else {
         navigate(from);
       }
@@ -70,74 +76,110 @@ export function Auth({ mode }: AuthProps) {
             </span>
           </Link>
           <h1 className="text-3xl font-bold text-gray-800">
-            {mode === 'signin' ? 'Welcome back!' : 'Create your account'}
+            {signupSuccess ? 'Check your email!' : mode === 'signin' ? 'Welcome back!' : 'Create your account'}
           </h1>
           <p className="text-gray-600 mt-2">
-            {mode === 'signin'
+            {signupSuccess
+              ? 'We sent you a confirmation link'
+              : mode === 'signin'
               ? 'Sign in to continue creating amazing stories'
               : 'Start creating personalized stories for your child'}
           </p>
         </div>
 
         <Card>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
-                {error}
+          {signupSuccess ? (
+            <div className="text-center py-8">
+              <div className="mb-6 flex justify-center">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
               </div>
-            )}
-
-            <Input
-              type="email"
-              label="Email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <Input
-              type="password"
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            {mode === 'signup' && (
-              <Input
-                type="password"
-                label="Confirm Password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            )}
-
-            <Button type="submit" className="w-full" loading={loading}>
-              {mode === 'signin' ? 'Sign In' : 'Create Account'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            {mode === 'signin' ? (
-              <p className="text-gray-600">
-                Don't have an account?{' '}
-                <Link to="/signup" className="text-primary-600 font-semibold hover:text-primary-700">
-                  Sign up
-                </Link>
+              <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                Confirm your email address
+              </h2>
+              <p className="text-gray-600 mb-2">
+                We sent a confirmation email to:
               </p>
-            ) : (
-              <p className="text-gray-600">
-                Already have an account?{' '}
+              <p className="text-gray-800 font-semibold mb-4">
+                {email}
+              </p>
+              <p className="text-gray-600 mb-6">
+                Click the link in the email to activate your account and start creating personalized stories!
+              </p>
+              <div className="text-sm text-gray-500">
+                <p>Didn't receive the email? Check your spam folder.</p>
+              </div>
+              <div className="mt-6 pt-6 border-t border-gray-200">
                 <Link to="/signin" className="text-primary-600 font-semibold hover:text-primary-700">
-                  Sign in
+                  Return to sign in
                 </Link>
-              </p>
-            )}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <Input
+                  type="email"
+                  label="Email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+
+                <Input
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+
+                {mode === 'signup' && (
+                  <Input
+                    type="password"
+                    label="Confirm Password"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                )}
+
+                <Button type="submit" className="w-full" loading={loading}>
+                  {mode === 'signin' ? 'Sign In' : 'Create Account'}
+                </Button>
+              </form>
+
+              <div className="mt-6 text-center">
+                {mode === 'signin' ? (
+                  <p className="text-gray-600">
+                    Don't have an account?{' '}
+                    <Link to="/signup" className="text-primary-600 font-semibold hover:text-primary-700">
+                      Sign up
+                    </Link>
+                  </p>
+                ) : (
+                  <p className="text-gray-600">
+                    Already have an account?{' '}
+                    <Link to="/signin" className="text-primary-600 font-semibold hover:text-primary-700">
+                      Sign in
+                    </Link>
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </Card>
       </div>
     </div>
