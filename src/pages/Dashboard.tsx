@@ -34,8 +34,12 @@ export function Dashboard() {
     // Clear any previous warning
     setIllustrationWarning(null);
 
-    const sourceIllustrationUrl = generationMode === 'illustration' && selectedIllustration
-      ? selectedIllustration.image_url
+    const sourceIllustration = generationMode === 'illustration' && selectedIllustration
+      ? {
+          url: selectedIllustration.image_url,
+          title: selectedIllustration.name,
+          description: selectedIllustration.description,
+        }
       : null;
 
     // Build physical characteristics for API
@@ -54,7 +58,7 @@ export function Dashboard() {
       selectedChild.favorite_things,
       selectedChild.parent_summary,
       customPrompt.trim() || null,
-      sourceIllustrationUrl,
+      sourceIllustration,
       physicalCharacteristics
     );
 
@@ -73,7 +77,7 @@ export function Dashboard() {
         result.content,
         customPrompt.trim() || null,
         result.illustrations,
-        sourceIllustrationUrl
+        sourceIllustration?.url ?? null
       );
 
       if (story) {
