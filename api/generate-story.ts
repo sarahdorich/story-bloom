@@ -381,6 +381,5 @@ Respond in this exact JSON format:
 }
 
 export const config = {
-  runtime: 'edge',
   maxDuration: 180, // Allow up to 180 seconds for story generation (Claude + DALL-E + upload)
 };
