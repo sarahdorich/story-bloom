@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+import { createClient } from '@supabase/supabase-js';
 
 interface RequestBody {
   childName: string;
@@ -12,7 +14,69 @@ interface RequestBody {
 interface StoryResponse {
   title: string;
   content: string;
-  illustrations: { description: string; position: number }[];
+  illustrations: { description: string; position: number; imageUrl?: string }[];
+}
+
+async function generateAndUploadIllustration(
+  description: string,
+  openai: OpenAI,
+  supabaseUrl: string,
+  supabaseKey: string
+): Promise<string | null> {
+  try {
+    // Generate image with DALL-E 3
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: `Children's book illustration, colorful and friendly style: ${description}. Style: warm, inviting, suitable for children, storybook illustration, soft colors, whimsical.`,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard',
+    });
+
+    const tempImageUrl = response.data[0]?.url;
+    if (!tempImageUrl) return null;
+
+    // Fetch the image from OpenAI's temporary URL
+    const imageResponse = await fetch(tempImageUrl);
+    if (!imageResponse.ok) {
+      console.error('Failed to fetch image from OpenAI');
+      return null;
+    }
+
+    const imageBlob = await imageResponse.blob();
+    const imageBuffer = await imageBlob.arrayBuffer();
+
+    // Create Supabase client
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 15);
+    const filename = `illustrations/${timestamp}-${randomId}.png`;
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('story-illustrations')
+      .upload(filename, imageBuffer, {
+        contentType: 'image/png',
+        cacheControl: '31536000', // Cache for 1 year
+      });
+
+    if (uploadError) {
+      console.error('Error uploading to Supabase:', uploadError);
+      return null;
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from('story-illustrations')
+      .getPublicUrl(filename);
+
+    return publicUrlData.publicUrl;
+  } catch (error) {
+    console.error('Error generating/uploading illustration:', error);
+    return null;
+  }
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -34,15 +98,21 @@ export default async function handler(req: Request): Promise<Response> {
       });
     }
 
-    const apiKey = process.env.VITE_ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'API key not configured' }), {
+    const anthropicApiKey = process.env.VITE_ANTHROPIC_API_KEY;
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!anthropicApiKey) {
+      return new Response(JSON.stringify({ error: 'Anthropic API key not configured' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const anthropic = new Anthropic({ apiKey });
+    const anthropic = new Anthropic({ apiKey: anthropicApiKey });
+    const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
+    const canUploadImages = openai && supabaseUrl && supabaseServiceKey;
 
     const wordCountByLevel: Record<string, { min: number; max: number; sentences: string }> = {
       'Pre-K': { min: 25, max: 40, sentences: '3-5 very short sentences' },
@@ -124,6 +194,21 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format, no additional text
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    // Generate actual illustrations using DALL-E 3 and upload to Supabase
+    if (canUploadImages && storyData.illustrations?.length > 0) {
+      const illustrationPromises = storyData.illustrations.map(async (illustration) => {
+        const imageUrl = await generateAndUploadIllustration(
+          illustration.description,
+          openai,
+          supabaseUrl,
+          supabaseServiceKey
+        );
+        return { ...illustration, imageUrl: imageUrl || undefined };
+      });
+
+      storyData.illustrations = await Promise.all(illustrationPromises);
     }
 
     return new Response(JSON.stringify(storyData), {
