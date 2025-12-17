@@ -38,6 +38,15 @@ export function Dashboard() {
       ? selectedIllustration.image_url
       : null;
 
+    // Build physical characteristics for API
+    const physicalCharacteristics = {
+      skinTone: selectedChild.skin_tone,
+      hairColor: selectedChild.hair_color,
+      eyeColor: selectedChild.eye_color,
+      gender: selectedChild.gender,
+      pronouns: selectedChild.pronouns,
+    };
+
     const result = await generateStory(
       selectedChild.name,
       selectedChild.age,
@@ -45,7 +54,8 @@ export function Dashboard() {
       selectedChild.favorite_things,
       selectedChild.parent_summary,
       customPrompt.trim() || null,
-      sourceIllustrationUrl
+      sourceIllustrationUrl,
+      physicalCharacteristics
     );
 
     if (result) {

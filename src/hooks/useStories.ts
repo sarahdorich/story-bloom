@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Story, StoryGenerationResponse, Illustration } from '../types';
+import type { Story, StoryGenerationResponse, Illustration, SkinTone, HairColor, EyeColor, Gender, Pronouns } from '../types';
+
+export interface PhysicalCharacteristicsForApi {
+  skinTone: SkinTone | null;
+  hairColor: HairColor | null;
+  eyeColor: EyeColor | null;
+  gender: Gender | null;
+  pronouns: Pronouns | null;
+}
 
 export function useStories(childId: string | undefined) {
   const [stories, setStories] = useState<Story[]>([]);
@@ -143,7 +151,8 @@ export function useGenerateStory() {
     favoriteThings: string[],
     parentSummary: string | null,
     customPrompt: string | null,
-    sourceIllustrationUrl: string | null = null
+    sourceIllustrationUrl: string | null = null,
+    physicalCharacteristics: PhysicalCharacteristicsForApi | null = null
   ): Promise<StoryGenerationResponse | null> => {
     setGenerating(true);
     setError(null);
@@ -160,6 +169,7 @@ export function useGenerateStory() {
           parentSummary,
           customPrompt,
           sourceIllustrationUrl,
+          physicalCharacteristics,
         }),
       });
 

@@ -2,6 +2,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
+interface PhysicalCharacteristics {
+  skinTone: string | null;
+  hairColor: string | null;
+  eyeColor: string | null;
+  gender: string | null;
+  pronouns: string | null;
+}
+
 interface RequestBody {
   childName: string;
   childAge: number;
@@ -10,6 +18,7 @@ interface RequestBody {
   parentSummary: string | null;
   customPrompt: string | null;
   sourceIllustrationUrl: string | null;
+  physicalCharacteristics?: PhysicalCharacteristics | null;
 }
 
 interface StoryResponse {
@@ -24,17 +33,54 @@ interface IllustrationResult {
   error?: string;
 }
 
+function buildCharacterDescription(childName: string, characteristics: PhysicalCharacteristics | null | undefined): string {
+  if (!characteristics) return '';
+
+  const parts: string[] = [];
+
+  // Only add characteristics that are specified (not null and not "diverse")
+  if (characteristics.skinTone && characteristics.skinTone !== 'diverse') {
+    parts.push(`${characteristics.skinTone} skin tone`);
+  }
+  if (characteristics.hairColor && characteristics.hairColor !== 'diverse') {
+    parts.push(`${characteristics.hairColor} hair`);
+  }
+  if (characteristics.eyeColor && characteristics.eyeColor !== 'diverse') {
+    parts.push(`${characteristics.eyeColor} eyes`);
+  }
+  if (characteristics.gender && characteristics.gender !== 'diverse' && characteristics.gender !== 'prefer-not-to-say') {
+    // Map gender to child-appropriate terms
+    const genderMap: Record<string, string> = {
+      'male': 'boy',
+      'female': 'girl',
+      'non-binary': 'child',
+      'genderfluid': 'child',
+      'genderqueer': 'child',
+    };
+    parts.push(genderMap[characteristics.gender] || 'child');
+  }
+
+  if (parts.length === 0) return '';
+
+  return `When depicting the main character ${childName}, show them as a ${parts.join(', ')}. `;
+}
+
 async function generateAndUploadIllustration(
   description: string,
   openai: OpenAI,
   supabaseUrl: string,
-  supabaseKey: string
+  supabaseKey: string,
+  childName: string,
+  physicalCharacteristics?: PhysicalCharacteristics | null
 ): Promise<IllustrationResult> {
   try {
+    // Build character appearance description if physical characteristics are provided
+    const characterDescription = buildCharacterDescription(childName, physicalCharacteristics);
+
     // Generate image with DALL-E 3
     const response = await openai.images.generate({
       model: 'dall-e-3',
-      prompt: `Children's book illustration, colorful and friendly style: ${description}. Style: warm, inviting, suitable for children, storybook illustration, soft colors, whimsical.`,
+      prompt: `Children's book illustration, colorful and friendly style: ${description}. ${characterDescription}Style: warm, inviting, suitable for children, storybook illustration, soft colors, whimsical.`,
       n: 1,
       size: '1024x1024',
       quality: 'standard',
@@ -105,7 +151,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     const body: RequestBody = await req.json();
-    const { childName, childAge, readingLevel, favoriteThings, parentSummary, customPrompt, sourceIllustrationUrl } = body;
+    const { childName, childAge, readingLevel, favoriteThings, parentSummary, customPrompt, sourceIllustrationUrl, physicalCharacteristics } = body;
 
     if (!childName || !childAge || !readingLevel || !favoriteThings?.length) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -283,7 +329,9 @@ Respond in this exact JSON format:
           illustration.description,
           openai,
           supabaseUrl,
-          supabaseServiceKey
+          supabaseServiceKey,
+          childName,
+          physicalCharacteristics
         );
 
         // Track content policy violations to warn the user
