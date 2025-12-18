@@ -212,7 +212,6 @@ To totally reset (recreate) your local database, run this:
 supabase db reset
 ```
 
-
 ## Project Structure
 
 ```
