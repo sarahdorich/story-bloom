@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { StoryPreviewCard } from './StoryPreviewCard'
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -25,51 +26,90 @@ export default async function LandingPage() {
               StoryBloom
             </span>
           </div>
-          <Link
-            href="/auth"
-            className="px-5 py-2.5 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-colors shadow-lg hover:shadow-xl"
-          >
-            Sign In
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/auth"
+              className="px-5 py-2.5 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-colors shadow-lg hover:shadow-xl"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex items-center justify-center pt-20 pb-12 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-8">
-            <span className="inline-block px-4 py-2 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold mb-6">
-              AI-Powered Personalized Stories
-            </span>
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6 leading-tight">
-              Create Magical Stories
-              <span className="block bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
-                Just for Your Child
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Watch your child become the hero of their own adventures. Our AI crafts unique,
-              age-appropriate stories featuring their name, interests, and imagination.
-            </p>
+      <main className="flex-1 pt-24 pb-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Hero Content */}
+          <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+            <div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-800 leading-tight mb-6">
+                Stories that{' '}
+                <span className="bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+                  grow with your child
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                StoryBloom creates personalized, age-appropriate stories tailored to your child&apos;s interests and reading level. Watch their love of reading bloom!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/auth"
+                  className="px-8 py-4 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all shadow-lg hover:shadow-xl text-lg text-center"
+                >
+                  Start Creating Stories
+                </Link>
+                <a
+                  href="#features"
+                  className="px-8 py-4 border-2 border-primary-500 text-primary-600 font-semibold rounded-xl hover:bg-primary-50 transition-colors text-lg text-center"
+                >
+                  Learn More
+                </a>
+              </div>
+            </div>
+
+            {/* Story Preview Card */}
+            <StoryPreviewCard />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link
-              href="/auth"
-              className="px-8 py-4 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-all shadow-lg hover:shadow-xl text-lg"
-            >
-              Start Creating Stories
-            </Link>
-            <a
-              href="#features"
-              className="px-8 py-4 border-2 border-primary-500 text-primary-600 font-semibold rounded-xl hover:bg-primary-50 transition-colors text-lg"
-            >
-              Learn More
-            </a>
-          </div>
+          {/* Features Section */}
+          <section id="features" className="bg-white/50 rounded-3xl p-8 md:p-12 mb-12">
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
+              Why parents love StoryBloom
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-lg text-gray-800 mb-2">Personalized Content</h3>
+                <p className="text-gray-600">Stories featuring your child&apos;s name, interests, and adventures they&apos;ll love</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-lg text-gray-800 mb-2">Age-Appropriate</h3>
+                <p className="text-gray-600">Vocabulary and complexity matched to your child&apos;s reading level</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-lg text-gray-800 mb-2">Save Favorites</h3>
+                <p className="text-gray-600">Build a library of beloved stories to read again and again</p>
+              </div>
+            </div>
+          </section>
 
-          {/* Features Preview */}
-          <div id="features" className="grid md:grid-cols-3 gap-6 mt-16">
+          {/* Additional Features */}
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-2xl shadow-lg p-6 text-left">
               <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +142,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-800 mb-2">Age-Appropriate</h3>
               <p className="text-gray-600 text-sm">
-                Stories are tailored to your child's reading level, from Pre-K through 6th grade.
+                Stories are tailored to your child&apos;s reading level, from Pre-K through 6th grade.
               </p>
             </div>
           </div>
@@ -110,8 +150,10 @@ export default async function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-gray-500 text-sm">
-        <p>&copy; {new Date().getFullYear()} StoryBloom. Made with love for little readers.</p>
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p className="text-gray-400">Made with &#10084;&#xfe0f; for little readers everywhere and inspired by my daughter Dallas</p>
+        </div>
       </footer>
     </div>
   )
