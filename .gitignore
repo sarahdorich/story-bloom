@@ -52,3 +52,6 @@ next-env.d.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Directory containing instructions for Claude Code
+claude_instruction_docs/*
