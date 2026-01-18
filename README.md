@@ -11,6 +11,44 @@ A personalized children's reading app that generates custom stories using AI. St
 - **Favorites**: Mark favorite stories for easy access
 - **Adjustable Font Size**: Customize reading experience with multiple font sizes
 - **Tablet-Optimized**: Designed for iPad and tablet reading
+- **Word Quest**: Gamified reading practice with speech recognition and virtual pets
+
+## Word Quest
+
+Word Quest is a fun reading practice game that helps children improve their word recognition skills through speech-based exercises.
+
+### How It Works
+
+1. **Practice Words**: Children see age-appropriate words matched to their reading level
+2. **Speech Recognition**: Tap the microphone and read the word aloud
+3. **Earn Rewards**: Get stars for correct answers and unlock virtual pets
+4. **Pet Companions**: Feed, play with, and level up adorable pets
+
+### Features
+
+- **Reading Level Support**: Words from Pre-K through 6th Grade (sight words, phonics, vocabulary)
+- **Speech Recognition**: Uses Web Speech API with fuzzy matching for young readers
+- **Virtual Pets**: Earn pets based on the child's favorite things (cats, dogs, dinosaurs, unicorns, and more)
+- **Pet Interactions**: Feed, play, pet, and talk to pets with AI-generated responses
+- **Progress Tracking**: Track words practiced, mastery levels, and session history
+- **Leveling System**: Pets gain XP and unlock new behaviors as they level up
+
+### Setting Up Word Quest
+
+After running the database migrations, seed the word lists:
+
+```bash
+docker exec -i supabase_db_story-bloom psql -U postgres < supabase/seed-word-lists.sql
+```
+
+### Browser Support
+
+Word Quest works best in:
+- Chrome (recommended)
+- Edge
+- Safari (partial support)
+
+Mobile browsers with microphone access are also supported.
 
 ## Tech Stack
 
