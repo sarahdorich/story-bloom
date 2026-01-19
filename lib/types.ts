@@ -199,6 +199,102 @@ export interface PracticeAttemptResult {
 // Pet System Types
 // ============================================
 
+// Pet Customization Colors
+export const PET_COLORS = [
+  { id: 'black', label: 'Black', hex: '#1a1a1a' },
+  { id: 'white', label: 'White', hex: '#ffffff' },
+  { id: 'gray', label: 'Gray', hex: '#6b7280' },
+  { id: 'brown', label: 'Brown', hex: '#92400e' },
+  { id: 'orange', label: 'Orange', hex: '#f97316' },
+  { id: 'yellow', label: 'Yellow', hex: '#fbbf24' },
+  { id: 'red', label: 'Red', hex: '#ef4444' },
+  { id: 'pink', label: 'Pink', hex: '#f472b6' },
+  { id: 'purple', label: 'Purple', hex: '#a855f7' },
+  { id: 'blue', label: 'Blue', hex: '#3b82f6' },
+  { id: 'green', label: 'Green', hex: '#22c55e' },
+  { id: 'rainbow', label: 'Rainbow', hex: 'linear-gradient(90deg, #ef4444, #f97316, #fbbf24, #22c55e, #3b82f6, #a855f7)' },
+  { id: 'golden', label: 'Golden', hex: '#d4a017' },
+] as const;
+
+export type PetColor = (typeof PET_COLORS)[number]['id'];
+
+// Pet Patterns
+export const PET_PATTERNS = [
+  { id: 'solid', label: 'Solid Color' },
+  { id: 'spotted', label: 'Spotted' },
+  { id: 'striped', label: 'Striped' },
+  { id: 'tabby', label: 'Tabby' },
+  { id: 'calico', label: 'Calico' },
+  { id: 'tuxedo', label: 'Tuxedo' },
+  { id: 'gradient', label: 'Gradient' },
+  { id: 'sparkly', label: 'Sparkly' },
+  { id: 'galaxy', label: 'Galaxy' },
+] as const;
+
+export type PetPattern = (typeof PET_PATTERNS)[number]['id'];
+
+// Pet Accessories
+export const PET_ACCESSORIES = [
+  { id: 'none', label: 'None' },
+  { id: 'bow', label: 'Bow' },
+  { id: 'collar', label: 'Collar' },
+  { id: 'crown', label: 'Crown' },
+  { id: 'hat', label: 'Hat' },
+  { id: 'glasses', label: 'Glasses' },
+  { id: 'scarf', label: 'Scarf' },
+  { id: 'bandana', label: 'Bandana' },
+  { id: 'flower', label: 'Flower' },
+  { id: 'star', label: 'Star' },
+] as const;
+
+export type PetAccessory = (typeof PET_ACCESSORIES)[number]['id'];
+
+// Pet Customization interface
+export interface PetCustomization {
+  colorPrimary: PetColor | null;
+  colorSecondary: PetColor | null;
+  pattern: PetPattern | null;
+  accessory: PetAccessory | null;
+  customDescription: string | null;
+}
+
+// Child's pet preferences (saved for future pets)
+export interface PetPreferences {
+  defaultColorPrimary?: PetColor;
+  defaultColorSecondary?: PetColor;
+  defaultPattern?: PetPattern;
+  favoriteAccessories?: PetAccessory[];
+}
+
+// Image generation status
+export type ImageGenerationStatus = 'pending' | 'generating' | 'completed' | 'failed';
+
+// Habitat Types for Phase 2
+export const HABITAT_TYPES = {
+  default: { label: 'Cozy Room', gradient: 'from-purple-100 to-pink-100' },
+  forest: { label: 'Forest', gradient: 'from-green-200 to-emerald-100' },
+  ocean: { label: 'Ocean', gradient: 'from-blue-200 to-cyan-100' },
+  sky: { label: 'Sky', gradient: 'from-sky-200 to-indigo-100' },
+  meadow: { label: 'Meadow', gradient: 'from-yellow-100 to-green-100' },
+  cave: { label: 'Crystal Cave', gradient: 'from-purple-200 to-indigo-200' },
+} as const;
+
+export type HabitatType = keyof typeof HABITAT_TYPES;
+
+// Map pet types to their default habitats
+export const PET_DEFAULT_HABITATS: Record<PetType, HabitatType> = {
+  cat: 'default',
+  dog: 'meadow',
+  dinosaur: 'forest',
+  unicorn: 'meadow',
+  dragon: 'cave',
+  bunny: 'meadow',
+  bear: 'forest',
+  bird: 'sky',
+  fish: 'ocean',
+  butterfly: 'meadow',
+};
+
 export const PET_TYPES = [
   'cat',
   'dog',
@@ -222,6 +318,18 @@ export interface Pet {
   personality: string;
   image_url: string | null;
   image_storage_path: string | null;
+  // Customization fields (Phase 1)
+  color_primary: PetColor | null;
+  color_secondary: PetColor | null;
+  pattern: PetPattern | null;
+  accessory: PetAccessory | null;
+  custom_description: string | null;
+  image_generation_prompt: string | null;
+  image_generation_status: ImageGenerationStatus;
+  // Habitat fields (Phase 2)
+  habitat_type: HabitatType | null;
+  habitat_decorations: string[] | null;
+  // Stats
   happiness: number; // 0-100
   energy: number; // 0-100
   level: number; // 1-10

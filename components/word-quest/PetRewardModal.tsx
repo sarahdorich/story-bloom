@@ -1,15 +1,23 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import type { Pet, PetType } from '@/lib/types'
-import { Button } from '@/components/ui'
+import { useState, useEffect, useCallback } from 'react';
+import type { Pet, PetType, PetCustomization } from '@/lib/types';
+import { Button } from '@/components/ui';
+import { PetCustomizationForm } from './PetCustomizationForm';
+
+type ModalStep = 'reveal' | 'customize' | 'generating' | 'complete';
 
 interface PetRewardModalProps {
-  show: boolean
-  pet: Pet | null
-  isFirstPet?: boolean
-  onClose: () => void
-  onVisitPet?: () => void
+  show: boolean;
+  pet: Pet | null;
+  petType: PetType;
+  isFirstPet?: boolean;
+  onClose: () => void;
+  onVisitPet?: () => void;
+  onCreatePet?: (
+    customization: PetCustomization,
+    name: string
+  ) => Promise<Pet | null>;
 }
 
 const PET_EMOJIS: Record<PetType, string> = {
@@ -23,25 +31,113 @@ const PET_EMOJIS: Record<PetType, string> = {
   bird: '🐦',
   fish: '🐠',
   butterfly: '🦋',
-}
+};
 
-export function PetRewardModal({ show, pet, isFirstPet, onClose, onVisitPet }: PetRewardModalProps) {
-  const [isVisible, setIsVisible] = useState(false)
-  const [showConfetti, setShowConfetti] = useState(false)
+const PET_TYPE_LABELS: Record<PetType, string> = {
+  cat: 'Cat',
+  dog: 'Dog',
+  dinosaur: 'Dinosaur',
+  unicorn: 'Unicorn',
+  dragon: 'Dragon',
+  bunny: 'Bunny',
+  bear: 'Bear',
+  bird: 'Bird',
+  fish: 'Fish',
+  butterfly: 'Butterfly',
+};
+
+const GENERATING_MESSAGES = [
+  'Creating your special pet...',
+  'Adding some magic...',
+  'Almost there...',
+  'Making it extra special...',
+];
+
+export function PetRewardModal({
+  show,
+  pet,
+  petType,
+  isFirstPet,
+  onClose,
+  onVisitPet,
+  onCreatePet,
+}: PetRewardModalProps) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [step, setStep] = useState<ModalStep>('reveal');
+  const [createdPet, setCreatedPet] = useState<Pet | null>(null);
+  const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  // Use provided pet or created pet
+  const displayPet = createdPet || pet;
+  const emoji = PET_EMOJIS[petType] || '🐾';
 
   useEffect(() => {
     if (show) {
-      setIsVisible(true)
-      setTimeout(() => setShowConfetti(true), 300)
+      setIsVisible(true);
+      setStep('reveal');
+      setCreatedPet(null);
+      setError(null);
+      setTimeout(() => setShowConfetti(true), 300);
     } else {
-      setIsVisible(false)
-      setShowConfetti(false)
+      setIsVisible(false);
+      setShowConfetti(false);
     }
-  }, [show])
+  }, [show]);
 
-  if (!show || !pet) return null
+  // Cycle through generating messages
+  useEffect(() => {
+    if (step === 'generating') {
+      const interval = setInterval(() => {
+        setGeneratingMessageIndex(
+          (prev) => (prev + 1) % GENERATING_MESSAGES.length
+        );
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [step]);
 
-  const emoji = PET_EMOJIS[pet.pet_type as PetType] || '🐾'
+  const handleProceedToCustomize = useCallback(() => {
+    setShowConfetti(false);
+    setStep('customize');
+  }, []);
+
+  const handleCustomizationSubmit = useCallback(
+    async (customization: PetCustomization, name: string) => {
+      if (!onCreatePet) {
+        setError('Pet creation not available');
+        return;
+      }
+
+      setStep('generating');
+      setError(null);
+      setGeneratingMessageIndex(0);
+
+      try {
+        const newPet = await onCreatePet(customization, name);
+        if (newPet) {
+          setCreatedPet(newPet);
+          setStep('complete');
+          setShowConfetti(true);
+        } else {
+          setError('Failed to create pet. Please try again.');
+          setStep('customize');
+        }
+      } catch {
+        setError('Something went wrong. Please try again.');
+        setStep('customize');
+      }
+    },
+    [onCreatePet]
+  );
+
+  const handleBackToCustomize = useCallback(() => {
+    setStep('customize');
+    setError(null);
+  }, []);
+
+  if (!show) return null;
 
   return (
     <div
@@ -52,7 +148,10 @@ export function PetRewardModal({ show, pet, isFirstPet, onClose, onVisitPet }: P
       `}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={step === 'generating' ? undefined : onClose}
+      />
 
       {/* Confetti */}
       {showConfetti && (
@@ -78,60 +177,170 @@ export function PetRewardModal({ show, pet, isFirstPet, onClose, onVisitPet }: P
       {/* Modal Content */}
       <div
         className={`
-          relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center
-          transform transition-all duration-500
+          relative bg-white rounded-3xl shadow-2xl max-w-md w-full text-center
+          transform transition-all duration-500 max-h-[90vh] overflow-y-auto
           ${isVisible ? 'scale-100 translate-y-0' : 'scale-90 translate-y-8'}
         `}
       >
-        {/* Sparkle decoration */}
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl animate-bounce">
-          ✨
-        </div>
-
-        {/* Header */}
-        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-600 mb-2">
-          {isFirstPet ? 'Your First Pet!' : 'New Pet Unlocked!'}
-        </h2>
-        <p className="text-gray-500 text-sm mb-6">
-          {isFirstPet
-            ? 'Great job reading! Here\'s a special friend just for you!'
-            : 'Keep practicing to unlock more pets!'}
-        </p>
-
-        {/* Pet Display */}
-        <div className="relative mb-6">
-          {pet.image_url ? (
-            <img
-              src={pet.image_url}
-              alt={pet.name}
-              className="w-40 h-40 mx-auto rounded-2xl object-cover shadow-lg animate-float"
-            />
-          ) : (
-            <div className="w-40 h-40 mx-auto rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center shadow-lg animate-float">
-              <span className="text-7xl">{emoji}</span>
+        {/* Step: Reveal */}
+        {step === 'reveal' && (
+          <div className="p-8">
+            {/* Sparkle decoration */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl animate-bounce">
+              ✨
             </div>
-          )}
-        </div>
 
-        {/* Pet Info */}
-        <div className="mb-6">
-          <h3 className="text-xl font-bold text-gray-800">{pet.name}</h3>
-          <p className="text-sm text-gray-500 capitalize">
-            A {pet.personality} {pet.pet_type}
-          </p>
-        </div>
+            {/* Header */}
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-600 mb-2">
+              {isFirstPet ? 'Your First Pet!' : 'New Pet Unlocked!'}
+            </h2>
+            <p className="text-gray-500 text-sm mb-6">
+              {isFirstPet
+                ? "Great job reading! You've earned a special friend!"
+                : 'Keep practicing to unlock more pets!'}
+            </p>
 
-        {/* Buttons */}
-        <div className="flex flex-col gap-3">
-          {onVisitPet && (
-            <Button onClick={onVisitPet} className="w-full">
-              Say Hello to {pet.name}!
+            {/* Pet Type Display */}
+            <div className="relative mb-6">
+              <div className="w-40 h-40 mx-auto rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center shadow-lg animate-float">
+                <span className="text-7xl">{emoji}</span>
+              </div>
+            </div>
+
+            {/* Pet Type Info */}
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-800">
+                A {PET_TYPE_LABELS[petType]}!
+              </h3>
+              <p className="text-sm text-gray-500">
+                Now let's make it unique to you!
+              </p>
+            </div>
+
+            {/* Button */}
+            <Button onClick={handleProceedToCustomize} className="w-full">
+              Customize My Pet!
             </Button>
-          )}
-          <Button variant="ghost" onClick={onClose} className="w-full">
-            Continue Practicing
-          </Button>
-        </div>
+          </div>
+        )}
+
+        {/* Step: Customize */}
+        {step === 'customize' && (
+          <div className="p-6">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+            <PetCustomizationForm
+              petType={petType}
+              onSubmit={handleCustomizationSubmit}
+              onCancel={onClose}
+              isLoading={false}
+            />
+          </div>
+        )}
+
+        {/* Step: Generating */}
+        {step === 'generating' && (
+          <div className="p-8">
+            <div className="mb-6">
+              <div className="w-32 h-32 mx-auto rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center shadow-lg relative overflow-hidden">
+                <span className="text-6xl animate-pulse">{emoji}</span>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+              </div>
+            </div>
+
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              {GENERATING_MESSAGES[generatingMessageIndex]}
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">
+              This may take a moment
+            </p>
+
+            {/* Loading spinner */}
+            <div className="flex justify-center">
+              <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+            </div>
+          </div>
+        )}
+
+        {/* Step: Complete */}
+        {step === 'complete' && displayPet && (
+          <div className="p-8">
+            {/* Sparkle decoration */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl animate-bounce">
+              ✨
+            </div>
+
+            {/* Header */}
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-600 mb-2">
+              Meet {displayPet.name}!
+            </h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Your new friend is ready to play!
+            </p>
+
+            {/* Pet Display */}
+            <div className="relative mb-6">
+              {displayPet.image_url ? (
+                <img
+                  src={displayPet.image_url}
+                  alt={displayPet.name}
+                  className="w-40 h-40 mx-auto rounded-2xl object-cover shadow-lg animate-float"
+                />
+              ) : (
+                <div className="w-40 h-40 mx-auto rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center shadow-lg animate-float">
+                  <span className="text-7xl">{emoji}</span>
+                </div>
+              )}
+              {/* Generating badge if image is still pending */}
+              {displayPet.image_generation_status === 'generating' && (
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-xs text-gray-500 flex items-center gap-1">
+                  <span className="w-3 h-3 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+                  Creating image...
+                </div>
+              )}
+            </div>
+
+            {/* Pet Info */}
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-800">
+                {displayPet.name}
+              </h3>
+              <p className="text-sm text-gray-500 capitalize">
+                A {displayPet.personality} {displayPet.pet_type}
+              </p>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-3">
+              {onVisitPet && (
+                <Button onClick={onVisitPet} className="w-full">
+                  Say Hello to {displayPet.name}!
+                </Button>
+              )}
+              <Button variant="ghost" onClick={onClose} className="w-full">
+                Continue Practicing
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Error state for generating failure */}
+        {step === 'generating' && error && (
+          <div className="p-8">
+            <div className="text-red-500 text-lg mb-4">😔</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              Oops, something went wrong
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">{error}</p>
+            <Button onClick={handleBackToCustomize} className="w-full">
+              Try Again
+            </Button>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
@@ -149,7 +358,8 @@ export function PetRewardModal({ show, pet, isFirstPet, onClose, onVisitPet }: P
           animation: confetti 3s ease-out forwards;
         }
         @keyframes float {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0);
           }
           50% {
@@ -159,7 +369,18 @@ export function PetRewardModal({ show, pet, isFirstPet, onClose, onVisitPet }: P
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 1.5s infinite;
+        }
       `}</style>
     </div>
-  )
+  );
 }

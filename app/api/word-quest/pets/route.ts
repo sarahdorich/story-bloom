@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import type { Pet, PetType } from '@/lib/types'
+import type { PetType, PetCustomization } from '@/lib/types'
 import { BEHAVIORS_BY_LEVEL, PET_MAPPINGS } from '@/lib/types'
+import { buildPetImagePrompt } from '@/lib/pet-customization-options'
+import { generateAndSavePetImage } from '@/lib/services/pet-image-generator'
 
 // GET: Fetch all pets for a child
 export async function GET(request: NextRequest) {
@@ -66,13 +68,21 @@ interface CreatePetBody {
   childId: string
   petType?: PetType
   name?: string
+  customization?: PetCustomization
+  generateImage?: boolean
 }
 
 // POST: Create a new pet
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePetBody = await request.json()
-    const { childId, petType: requestedPetType, name: requestedName } = body
+    const {
+      childId,
+      petType: requestedPetType,
+      name: requestedName,
+      customization,
+      generateImage = true,
+    } = body
 
     if (!childId) {
       return NextResponse.json(
@@ -93,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     const { data: child } = await supabase
       .from('children')
-      .select('id, name, favorite_things')
+      .select('id, name, favorite_things, pet_preferences')
       .eq('id', childId)
       .eq('user_id', user.id)
       .single()
@@ -114,7 +124,18 @@ export async function POST(request: NextRequest) {
     // Get initial behaviors (level 1)
     const initialBehaviors = BEHAVIORS_BY_LEVEL[petType]?.[0] || []
 
-    // Create the pet
+    // Build image generation prompt from customization
+    const finalCustomization: PetCustomization = {
+      colorPrimary: customization?.colorPrimary ?? null,
+      colorSecondary: customization?.colorSecondary ?? null,
+      pattern: customization?.pattern ?? null,
+      accessory: customization?.accessory ?? null,
+      customDescription: customization?.customDescription ?? null,
+    }
+
+    const imagePrompt = buildPetImagePrompt(petType, name, finalCustomization)
+
+    // Create the pet with customization fields
     const { data: pet, error } = await supabase
       .from('pets')
       .insert({
@@ -122,6 +143,13 @@ export async function POST(request: NextRequest) {
         pet_type: petType,
         name,
         personality,
+        color_primary: finalCustomization.colorPrimary,
+        color_secondary: finalCustomization.colorSecondary,
+        pattern: finalCustomization.pattern,
+        accessory: finalCustomization.accessory,
+        custom_description: finalCustomization.customDescription,
+        image_generation_prompt: imagePrompt,
+        image_generation_status: generateImage ? 'pending' : 'completed',
         happiness: 100,
         energy: 100,
         level: 1,
@@ -138,6 +166,14 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create pet' },
         { status: 500 }
       )
+    }
+
+    // Trigger async image generation if requested (fire and forget)
+    if (generateImage && pet) {
+      // Don't await - let it run in the background
+      generateAndSavePetImage(pet.id, imagePrompt).catch((err) => {
+        console.error('Background image generation failed:', err)
+      })
     }
 
     return NextResponse.json({ pet })

@@ -14,7 +14,8 @@ import {
   SuccessAnimation,
   PetRewardModal,
 } from '@/components/word-quest'
-import type { Pet } from '@/lib/types'
+import type { Pet, PetType, PetCustomization } from '@/lib/types'
+import { PET_MAPPINGS } from '@/lib/types'
 
 export default function PracticePage() {
   const router = useRouter()
@@ -27,6 +28,7 @@ export default function PracticePage() {
   const [showPetReward, setShowPetReward] = useState(false)
   const [newPet, setNewPet] = useState<Pet | null>(null)
   const [isFirstPet, setIsFirstPet] = useState(false)
+  const [rewardPetType, setRewardPetType] = useState<PetType>('cat')
 
   const {
     words,
@@ -46,7 +48,21 @@ export default function PracticePage() {
     wordsPerSession: 10,
   })
 
-  const { pets, createPet } = usePets({ childId: selectedChild?.id || '' })
+  const { pets, createPetWithCustomization } = usePets({ childId: selectedChild?.id || '' })
+
+  // Determine pet type from child's favorite things
+  const selectPetTypeFromFavorites = useCallback((favoriteThings: string[]): PetType => {
+    for (const thing of favoriteThings) {
+      const normalized = thing.toLowerCase().trim()
+      const words = normalized.split(/\s+/)
+      for (const word of words) {
+        if (PET_MAPPINGS[word]) {
+          return PET_MAPPINGS[word]
+        }
+      }
+    }
+    return 'cat'
+  }, [])
 
   const handleSpeechResult = useCallback(
     async (text: string) => {
@@ -92,18 +108,28 @@ export default function PracticePage() {
         setShowSuccess(true)
         await endSession()
 
-        // If this is the child's first session (no pets yet), create their first pet!
-        if (pets.length === 0) {
-          const pet = await createPet()
-          if (pet) {
-            setNewPet(pet)
-            setIsFirstPet(true)
-          }
+        // If this is the child's first session (no pets yet), show pet reward modal
+        if (pets.length === 0 && selectedChild) {
+          const petType = selectPetTypeFromFavorites(selectedChild.favorite_things || [])
+          setRewardPetType(petType)
+          setIsFirstPet(true)
         }
       }
     }
     handleSessionComplete()
-  }, [isSessionComplete, showSuccess, endSession, pets.length, createPet])
+  }, [isSessionComplete, showSuccess, endSession, pets.length, selectedChild, selectPetTypeFromFavorites])
+
+  // Handle pet creation from the reward modal
+  const handleCreatePet = useCallback(
+    async (customization: PetCustomization, name: string): Promise<Pet | null> => {
+      const pet = await createPetWithCustomization(rewardPetType, name, customization)
+      if (pet) {
+        setNewPet(pet)
+      }
+      return pet
+    },
+    [createPetWithCustomization, rewardPetType]
+  )
 
   // Reset transcript when advancing
   useEffect(() => {
@@ -279,7 +305,7 @@ export default function PracticePage() {
         wordsCorrect={wordsCorrect}
         totalWords={words.length}
         onComplete={() => {
-          if (newPet) {
+          if (isFirstPet) {
             setShowSuccess(false)
             setShowPetReward(true)
           } else {
@@ -292,6 +318,7 @@ export default function PracticePage() {
       <PetRewardModal
         show={showPetReward}
         pet={newPet}
+        petType={rewardPetType}
         isFirstPet={isFirstPet}
         onClose={() => router.push('/word-quest')}
         onVisitPet={() => {
@@ -299,6 +326,7 @@ export default function PracticePage() {
             router.push(`/word-quest/pets/${newPet.id}`)
           }
         }}
+        onCreatePet={handleCreatePet}
       />
     </div>
   )
