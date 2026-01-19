@@ -1,5 +1,6 @@
 -- Word Quest Seed Data
 -- Comprehensive word lists by reading level
+-- Uses ON CONFLICT DO NOTHING to make this idempotent (safe to run multiple times)
 
 -- ============================================
 -- PRE-K WORDS (90 words)
@@ -46,7 +47,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('this', 'Pre-K', 'sight_word', 6),
 ('with', 'Pre-K', 'sight_word', 6),
 ('one', 'Pre-K', 'sight_word', 6),
-('all', 'Pre-K', 'sight_word', 6);
+('all', 'Pre-K', 'sight_word', 6)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- Pre-K Phonics Words (CVC patterns - 30 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -79,7 +81,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('hug', 'Pre-K', 'phonics', 6),
 ('rug', 'Pre-K', 'phonics', 6),
 ('box', 'Pre-K', 'phonics', 7),
-('fox', 'Pre-K', 'phonics', 7);
+('fox', 'Pre-K', 'phonics', 7)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- Pre-K Vocabulary Words (20 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -102,7 +105,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('duck', 'Pre-K', 'vocabulary', 6),
 ('frog', 'Pre-K', 'vocabulary', 7),
 ('cake', 'Pre-K', 'vocabulary', 7),
-('blue', 'Pre-K', 'vocabulary', 7);
+('blue', 'Pre-K', 'vocabulary', 7)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- ============================================
 -- KINDERGARTEN WORDS (130 words)
@@ -161,7 +165,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('over', 'Kindergarten', 'sight_word', 9),
 ('stop', 'Kindergarten', 'sight_word', 9),
 ('very', 'Kindergarten', 'sight_word', 9),
-('walk', 'Kindergarten', 'sight_word', 9);
+('walk', 'Kindergarten', 'sight_word', 9)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- Kindergarten Phonics Words (50 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -214,7 +219,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('left', 'Kindergarten', 'phonics', 10),
 ('fast', 'Kindergarten', 'phonics', 10),
 ('last', 'Kindergarten', 'phonics', 10),
-('best', 'Kindergarten', 'phonics', 10);
+('best', 'Kindergarten', 'phonics', 10)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- Kindergarten Vocabulary Words (30 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -247,7 +253,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('today', 'Kindergarten', 'vocabulary', 5),
 ('night', 'Kindergarten', 'vocabulary', 5),
 ('morning', 'Kindergarten', 'vocabulary', 6),
-('outside', 'Kindergarten', 'vocabulary', 7);
+('outside', 'Kindergarten', 'vocabulary', 7)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- ============================================
 -- 1ST GRADE WORDS (170 words)
@@ -295,7 +302,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('wish', '1st Grade', 'sight_word', 5),
 ('work', '1st Grade', 'sight_word', 5),
 ('would', '1st Grade', 'sight_word', 5),
-('write', '1st Grade', 'sight_word', 6);
+('write', '1st Grade', 'sight_word', 6)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- 1st Grade Phonics Words - Long Vowels (80 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -378,7 +386,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('load', '1st Grade', 'phonics', 7),
 ('boat', '1st Grade', 'phonics', 6),
 ('coat', '1st Grade', 'phonics', 6),
-('goat', '1st Grade', 'phonics', 6);
+('goat', '1st Grade', 'phonics', 6)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- 1st Grade Vocabulary Words (50 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -431,7 +440,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('world', '1st Grade', 'vocabulary', 5),
 ('yesterday', '1st Grade', 'vocabulary', 7),
 ('young', '1st Grade', 'vocabulary', 5),
-('zoo', '1st Grade', 'vocabulary', 4);
+('zoo', '1st Grade', 'vocabulary', 4)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- ============================================
 -- 2ND GRADE WORDS (200 words)
@@ -484,7 +494,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('start', '2nd Grade', 'sight_word', 5),
 ('tell', '2nd Grade', 'sight_word', 4),
 ('those', '2nd Grade', 'sight_word', 5),
-('today', '2nd Grade', 'sight_word', 5);
+('today', '2nd Grade', 'sight_word', 5)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- 2nd Grade Phonics Words (100 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -587,7 +598,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('balloon', '2nd Grade', 'phonics', 6),
 ('cartoon', '2nd Grade', 'phonics', 6),
 ('bedroom', '2nd Grade', 'phonics', 6),
-('bathroom', '2nd Grade', 'phonics', 7);
+('bathroom', '2nd Grade', 'phonics', 7)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- 2nd Grade Vocabulary Words (55 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -645,7 +657,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('surprise', '2nd Grade', 'vocabulary', 7),
 ('terrible', '2nd Grade', 'vocabulary', 7),
 ('wonderful', '2nd Grade', 'vocabulary', 7),
-('yesterday', '2nd Grade', 'vocabulary', 7);
+('yesterday', '2nd Grade', 'vocabulary', 7)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- ============================================
 -- 3RD GRADE WORDS (250 words - subset shown)
@@ -693,7 +706,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('together', '3rd Grade', 'sight_word', 6),
 ('try', '3rd Grade', 'sight_word', 4),
 ('warm', '3rd Grade', 'sight_word', 5),
-('wish', '3rd Grade', 'sight_word', 4);
+('wish', '3rd Grade', 'sight_word', 4)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- 3rd Grade Vocabulary Words (100 words - representative sample)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -746,7 +760,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('excellent', '3rd Grade', 'vocabulary', 7),
 ('exchange', '3rd Grade', 'vocabulary', 8),
 ('exercise', '3rd Grade', 'vocabulary', 7),
-('experience', '3rd Grade', 'vocabulary', 8);
+('experience', '3rd Grade', 'vocabulary', 8)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- ============================================
 -- 4TH-6TH GRADE WORDS (abbreviated - more academic vocabulary)
@@ -803,7 +818,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('classify', '4th Grade', 'vocabulary', 8),
 ('collaborate', '4th Grade', 'vocabulary', 8),
 ('commercial', '4th Grade', 'vocabulary', 8),
-('communicate', '4th Grade', 'vocabulary', 8);
+('communicate', '4th Grade', 'vocabulary', 8)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- 5th Grade Academic Vocabulary (50 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -856,7 +872,8 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('conjunction', '5th Grade', 'vocabulary', 9),
 ('conservation', '5th Grade', 'vocabulary', 9),
 ('constellation', '5th Grade', 'vocabulary', 9),
-('constitution', '5th Grade', 'vocabulary', 8);
+('constitution', '5th Grade', 'vocabulary', 8)
+ON CONFLICT (word, reading_level) DO NOTHING;
 
 -- 6th Grade Academic Vocabulary (50 words)
 INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
@@ -909,4 +926,5 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('correspondence', '6th Grade', 'vocabulary', 10),
 ('crystallization', '6th Grade', 'vocabulary', 10),
 ('decomposition', '6th Grade', 'vocabulary', 10),
-('demonstration', '6th Grade', 'vocabulary', 9);
+('demonstration', '6th Grade', 'vocabulary', 9)
+ON CONFLICT (word, reading_level) DO NOTHING;

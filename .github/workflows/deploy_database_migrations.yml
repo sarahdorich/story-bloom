@@ -59,6 +59,17 @@ jobs:
           echo "Verifying migration status..."
           supabase migration list --linked
 
+      - name: Apply seed data
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          echo "Applying seed data..."
+          # Clear existing word_lists data and re-seed to ensure consistency
+          supabase db execute --linked -f supabase/seed-word-lists.sql
+          echo "Seed data applied successfully!"
+
       - name: Create GitHub deployment
         if: success()
         uses: actions/github-script@v7
