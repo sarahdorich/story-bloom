@@ -59,7 +59,7 @@ jobs:
           for seed_file in supabase/seed*.sql; do
             if [ -f "$seed_file" ]; then
               echo "Applying seed: $seed_file"
-              supabase db execute --local -f "$seed_file"
+              psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f "$seed_file"
             fi
           done
           echo "✅ All seed files applied successfully"
