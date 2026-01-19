@@ -14,7 +14,96 @@
   }
 }
 
-/* Print styles for story reader */
+/* ============================================
+   Pet Habitat Idle Animations (Phase 2)
+   ============================================ */
+
+/* Breathing animation - subtle scale for most pets */
+@keyframes pet-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Floating animation - vertical drift for fish, butterfly, bird */
+@keyframes pet-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Slower float for decorative elements */
+@keyframes pet-float-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Gentle bounce for bunny, dog */
+@keyframes pet-bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Tail wag animation */
+@keyframes pet-wag {
+  0%, 100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+/* Animation classes */
+.animate-pet-breathe {
+  animation: pet-breathe 4s ease-in-out infinite;
+}
+
+.animate-pet-float {
+  animation: pet-float 3s ease-in-out infinite;
+}
+
+.animate-pet-float-slow {
+  animation: pet-float-slow 5s ease-in-out infinite;
+}
+
+.animate-pet-bounce-gentle {
+  animation: pet-bounce-gentle 2s ease-in-out infinite;
+}
+
+.animate-pet-wag {
+  animation: pet-wag 0.5s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+/* Respect user's reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pet-breathe,
+  .animate-pet-float,
+  .animate-pet-float-slow,
+  .animate-pet-bounce-gentle,
+  .animate-pet-wag {
+    animation: none;
+  }
+}
+
+/* ============================================
+   Print styles for story reader
+   ============================================ */
 @media print {
   /* Hide non-essential UI elements (but not article headers which contain story titles) */
   body > header,
