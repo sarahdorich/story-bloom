@@ -69,7 +69,8 @@ jobs:
           for seed_file in supabase/seed*.sql; do
             if [ -f "$seed_file" ]; then
               echo "Applying seed: $seed_file"
-              psql "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.${PROJECT_REF}.supabase.co:5432/postgres" -f "$seed_file"
+              # Use the transaction pooler (port 6543) which is accessible from CI environments
+              psql "postgresql://postgres.${PROJECT_REF}:${SUPABASE_DB_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:6543/postgres" -f "$seed_file"
             fi
           done
           echo "Seed data applied successfully!"
