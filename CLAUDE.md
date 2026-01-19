@@ -9,7 +9,7 @@ Native iOS app will eventually use Capacitor WebView loading from story-bloom.sh
 ## App Development Best Practices
 
 ### Reusable Components
-When adding features that appear in multiple places (e.g., onboarding AND settings), create a shared component in `app/components/` rather than duplicating code. Use the controlled component pattern where the parent manages state and passes `value`/`onChange` props.
+When adding features that appear in multiple places (e.g., onboarding AND settings), create a shared component in `components/` rather than duplicating code. Use the controlled component pattern where the parent manages state and passes `value`/`onChange` props.
 
 Before writing new UI code, check if similar functionality already exists that could be extracted into a reusable component
 

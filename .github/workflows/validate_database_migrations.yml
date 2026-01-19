@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
     paths:
       - 'supabase/migrations/**'
+      - 'supabase/seed*.sql'
       - '.github/workflows/validate-migrations.yml'
 
 permissions:
@@ -51,6 +52,17 @@ jobs:
         run: |
           echo "Testing migrations in isolated environment..."
           supabase db reset --local --debug
+
+      - name: Test seed files
+        run: |
+          echo "Testing seed files..."
+          for seed_file in supabase/seed*.sql; do
+            if [ -f "$seed_file" ]; then
+              echo "Applying seed: $seed_file"
+              supabase db execute --local -f "$seed_file"
+            fi
+          done
+          echo "✅ All seed files applied successfully"
 
       - name: Run database tests (if you have any)
         run: |
