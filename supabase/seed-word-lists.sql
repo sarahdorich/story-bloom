@@ -928,4 +928,3 @@ INSERT INTO word_lists (word, reading_level, category, difficulty_rank) VALUES
 ('decomposition', '6th Grade', 'vocabulary', 10),
 ('demonstration', '6th Grade', 'vocabulary', 9)
 ON CONFLICT (word, reading_level) DO NOTHING;
-
