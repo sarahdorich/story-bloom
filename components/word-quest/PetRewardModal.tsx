@@ -18,6 +18,10 @@ interface PetRewardModalProps {
     customization: PetCustomization,
     name: string
   ) => Promise<Pet | null>;
+  pollImageStatus?: (
+    petId: string,
+    onComplete?: (imageUrl: string) => void
+  ) => () => void;
 }
 
 const PET_EMOJIS: Record<PetType, string> = {
@@ -61,6 +65,7 @@ export function PetRewardModal({
   onClose,
   onVisitPet,
   onCreatePet,
+  pollImageStatus,
 }: PetRewardModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -97,6 +102,26 @@ export function PetRewardModal({
       return () => clearInterval(interval);
     }
   }, [step]);
+
+  // Poll for image generation completion
+  useEffect(() => {
+    if (
+      createdPet &&
+      pollImageStatus &&
+      (createdPet.image_generation_status === 'generating' ||
+        createdPet.image_generation_status === 'pending') &&
+      !createdPet.image_url
+    ) {
+      const cleanup = pollImageStatus(createdPet.id, (imageUrl) => {
+        setCreatedPet((prev) =>
+          prev
+            ? { ...prev, image_url: imageUrl, image_generation_status: 'completed' }
+            : null
+        );
+      });
+      return cleanup;
+    }
+  }, [createdPet, pollImageStatus]);
 
   const handleProceedToCustomize = useCallback(() => {
     setShowConfetti(false);

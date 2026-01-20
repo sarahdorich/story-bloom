@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, useCallback, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useChild } from '../../../ProtectedLayoutClient';
 import { PetHabitat, HabitatSelector, TrickPerformer } from '@/components/word-quest';
 import { Card } from '@/components/ui';
-import type { Pet, InteractionType, HabitatType, PetType } from '@/lib/types';
+import type { Pet, InteractionType, HabitatType, PetType, ImageGenerationStatus } from '@/lib/types';
 import { XP_PER_LEVEL, PET_DEFAULT_HABITATS } from '@/lib/types';
 
 interface PageProps {
@@ -36,6 +36,7 @@ export default function PetDetailPage({ params }: PageProps) {
   const [isChangingHabitat, setIsChangingHabitat] = useState(false);
   const [trickAnimationClass, setTrickAnimationClass] = useState<string | null>(null);
   const [newBehaviorsUnlocked, setNewBehaviorsUnlocked] = useState<string[]>([]);
+  const imagePollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchPet = useCallback(async () => {
     try {
@@ -55,6 +56,74 @@ export default function PetDetailPage({ params }: PageProps) {
   useEffect(() => {
     fetchPet();
   }, [fetchPet]);
+
+  // Poll for image generation completion
+  useEffect(() => {
+    if (
+      pet &&
+      (pet.image_generation_status === 'generating' ||
+        pet.image_generation_status === 'pending') &&
+      !pet.image_url
+    ) {
+      let pollCount = 0;
+      const maxPolls = 30; // ~60 seconds with 2s interval
+
+      const poll = async () => {
+        pollCount++;
+        try {
+          const response = await fetch(
+            `/api/word-quest/pets/${petId}/generate-image`
+          );
+          const result: { status: ImageGenerationStatus; imageUrl: string | null } =
+            await response.json();
+
+          if (result.status === 'completed' && result.imageUrl) {
+            // Update pet with new image
+            setPet((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    image_url: result.imageUrl,
+                    image_generation_status: 'completed',
+                  }
+                : null
+            );
+            // Stop polling
+            if (imagePollingRef.current) {
+              clearInterval(imagePollingRef.current);
+              imagePollingRef.current = null;
+            }
+          } else if (result.status === 'failed' || pollCount >= maxPolls) {
+            // Stop polling on failure or timeout
+            if (imagePollingRef.current) {
+              clearInterval(imagePollingRef.current);
+              imagePollingRef.current = null;
+            }
+            if (result.status === 'failed') {
+              setPet((prev) =>
+                prev
+                  ? { ...prev, image_generation_status: 'failed' }
+                  : null
+              );
+            }
+          }
+        } catch (err) {
+          console.error('Error polling image status:', err);
+        }
+      };
+
+      // Start polling
+      imagePollingRef.current = setInterval(poll, 2000);
+      poll(); // Poll immediately
+
+      return () => {
+        if (imagePollingRef.current) {
+          clearInterval(imagePollingRef.current);
+          imagePollingRef.current = null;
+        }
+      };
+    }
+  }, [pet?.id, pet?.image_generation_status, pet?.image_url, petId]);
 
   const handleInteract = async (interaction: InteractionType) => {
     if (!pet || isInteracting) return;
