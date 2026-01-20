@@ -743,3 +743,365 @@ export function getTrickAnimationDuration(trickName: string): number {
   const animationClass = getTrickAnimation(trickName);
   return TRICK_ANIMATION_DURATIONS[animationClass] || 1000;
 }
+
+// ============================================
+// Phase 4: Pet Accessories & Rewards Types
+// ============================================
+
+export const ACCESSORY_TYPES = ['hat', 'collar', 'body', 'background', 'effect'] as const;
+export type AccessoryType = (typeof ACCESSORY_TYPES)[number];
+
+export const ACCESSORY_RARITIES = ['common', 'rare', 'epic', 'legendary'] as const;
+export type AccessoryRarity = (typeof ACCESSORY_RARITIES)[number];
+
+export const RARITY_COLORS: Record<AccessoryRarity, { bg: string; text: string; border: string }> = {
+  common: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300' },
+  rare: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-400' },
+  epic: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-400' },
+  legendary: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-400' },
+};
+
+export const ACCESSORY_TYPE_EMOJIS: Record<AccessoryType, string> = {
+  hat: '🎩',
+  collar: '📿',
+  body: '👕',
+  background: '🖼️',
+  effect: '✨',
+};
+
+export type UnlockRequirementType = 'sessions' | 'words_mastered' | 'streak_days' | 'level';
+
+export interface UnlockRequirement {
+  type: UnlockRequirementType;
+  count: number;
+}
+
+export interface Accessory {
+  id: string;
+  name: string;
+  display_name: string;
+  description: string | null;
+  type: AccessoryType;
+  image_url: string | null;
+  rarity: AccessoryRarity;
+  unlock_requirement: UnlockRequirement;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ChildAccessory {
+  id: string;
+  child_id: string;
+  accessory_id: string;
+  unlocked_at: string;
+  unlock_source: string | null;
+  // Joined accessory data
+  accessory?: Accessory;
+}
+
+export interface PetEquippedAccessory {
+  id: string;
+  pet_id: string;
+  accessory_id: string;
+  slot: AccessoryType;
+  equipped_at: string;
+  // Joined accessory data
+  accessory?: Accessory;
+}
+
+// Helper to check if a requirement is met
+export function isAccessoryUnlocked(
+  requirement: UnlockRequirement,
+  stats: { sessions: number; wordsMastered: number; streakDays: number; level: number }
+): boolean {
+  switch (requirement.type) {
+    case 'sessions':
+      return stats.sessions >= requirement.count;
+    case 'words_mastered':
+      return stats.wordsMastered >= requirement.count;
+    case 'streak_days':
+      return stats.streakDays >= requirement.count;
+    case 'level':
+      return stats.level >= requirement.count;
+    default:
+      return false;
+  }
+}
+
+// Get progress toward unlocking an accessory (0-100)
+export function getUnlockProgress(
+  requirement: UnlockRequirement,
+  stats: { sessions: number; wordsMastered: number; streakDays: number; level: number }
+): number {
+  let current = 0;
+  switch (requirement.type) {
+    case 'sessions':
+      current = stats.sessions;
+      break;
+    case 'words_mastered':
+      current = stats.wordsMastered;
+      break;
+    case 'streak_days':
+      current = stats.streakDays;
+      break;
+    case 'level':
+      current = stats.level;
+      break;
+  }
+  return Math.min(100, Math.round((current / requirement.count) * 100));
+}
+
+// Format unlock requirement for display
+export function formatUnlockRequirement(requirement: UnlockRequirement): string {
+  switch (requirement.type) {
+    case 'sessions':
+      return `Complete ${requirement.count} practice sessions`;
+    case 'words_mastered':
+      return `Master ${requirement.count} words`;
+    case 'streak_days':
+      return `Reach a ${requirement.count}-day streak`;
+    case 'level':
+      return `Reach level ${requirement.count}`;
+    default:
+      return 'Unknown requirement';
+  }
+}
+
+// ============================================
+// Phase 5: Reading-Connected Pet Reactions Types
+// ============================================
+
+export const PET_MOODS = ['excited', 'happy', 'proud', 'content', 'sleepy', 'sad', 'lonely'] as const;
+export type PetMood = (typeof PET_MOODS)[number];
+
+export const MOOD_EMOJIS: Record<PetMood, string> = {
+  excited: '🤩',
+  happy: '😊',
+  proud: '🥳',
+  content: '😌',
+  sleepy: '😴',
+  sad: '😢',
+  lonely: '🥺',
+};
+
+export const MOOD_COLORS: Record<PetMood, string> = {
+  excited: 'text-yellow-500',
+  happy: 'text-green-500',
+  proud: 'text-purple-500',
+  content: 'text-blue-400',
+  sleepy: 'text-gray-400',
+  sad: 'text-blue-600',
+  lonely: 'text-gray-500',
+};
+
+export const READING_REACTION_TYPES = [
+  'session_complete',
+  'streak_milestone',
+  'word_mastery',
+  'perfect_session',
+  'level_up',
+  'comeback',
+  'daily_first',
+] as const;
+export type ReadingReactionType = (typeof READING_REACTION_TYPES)[number];
+
+export interface PetReadingReaction {
+  id: string;
+  pet_id: string;
+  practice_session_id: string | null;
+  reaction_type: ReadingReactionType;
+  reaction_mood: PetMood;
+  reaction_message: string | null;
+  words_practiced: number;
+  accuracy_percent: number;
+  streak_days: number;
+  xp_bonus: number;
+  created_at: string;
+}
+
+// Streak milestone thresholds for special reactions
+export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
+
+// Happiness decay rate per day without practice (minimum 20)
+export const HAPPINESS_DECAY_PER_DAY = 5;
+export const MINIMUM_HAPPINESS = 20;
+
+// Calculate pet mood based on happiness and recent activity
+export function calculatePetMood(
+  happiness: number,
+  daysSinceLastPractice: number,
+  hasRecentStreak: boolean
+): PetMood {
+  if (daysSinceLastPractice >= 3) {
+    return happiness < 40 ? 'sad' : 'lonely';
+  }
+  if (daysSinceLastPractice >= 1) {
+    return happiness < 50 ? 'sleepy' : 'content';
+  }
+  // Practiced today
+  if (hasRecentStreak && happiness >= 80) {
+    return 'excited';
+  }
+  if (happiness >= 70) {
+    return 'proud';
+  }
+  return 'happy';
+}
+
+// Calculate happiness after inactivity
+export function calculateHappinessDecay(
+  currentHappiness: number,
+  daysSinceLastPractice: number
+): number {
+  const decay = daysSinceLastPractice * HAPPINESS_DECAY_PER_DAY;
+  return Math.max(MINIMUM_HAPPINESS, currentHappiness - decay);
+}
+
+// Get reaction message templates by type and mood
+export const REACTION_MESSAGES: Record<ReadingReactionType, Record<PetMood, string[]>> = {
+  session_complete: {
+    excited: [
+      "WOW! You did amazing! I'm so proud of you!",
+      "That was incredible! You're getting so good at reading!",
+      "Yay! I loved practicing with you!",
+    ],
+    happy: [
+      "Great job today! I had so much fun!",
+      "You worked so hard! I'm happy!",
+      "Nice practice session! You're doing great!",
+    ],
+    proud: [
+      "Look at you go! You're becoming such a good reader!",
+      "I knew you could do it! Keep it up!",
+      "You should be proud of yourself!",
+    ],
+    content: ["Good practice today!", "Thanks for spending time with me!"],
+    sleepy: ["*yawn* Good job... practice makes perfect..."],
+    sad: ["Thanks for practicing... I missed you!"],
+    lonely: ["You came back! I'm so happy to see you!"],
+  },
+  streak_milestone: {
+    excited: [
+      "AMAZING! You've practiced {days} days in a row!",
+      "A {days}-day streak! You're unstoppable!",
+      "WOW! {days} days! You're a reading superstar!",
+    ],
+    happy: [
+      "{days} days in a row! Keep going!",
+      "Streak milestone: {days} days! Great work!",
+    ],
+    proud: [
+      "I'm so proud! {days} days of practice!",
+      "{days}-day streak! You're dedicated!",
+    ],
+    content: ["{days} days! Nice streak!"],
+    sleepy: ["{days} days... impressive..."],
+    sad: ["You're back after your streak!"],
+    lonely: ["Let's start a new streak together!"],
+  },
+  word_mastery: {
+    excited: [
+      "You mastered a new word! You're so smart!",
+      "Another word mastered! Your brain is growing!",
+    ],
+    happy: ["New word mastered! Well done!", "You learned a new word! Yay!"],
+    proud: ["I'm proud of you for mastering that word!"],
+    content: ["Nice! Another word learned."],
+    sleepy: ["Good... you learned a new word..."],
+    sad: ["You're still learning new words!"],
+    lonely: ["Welcome back, word master!"],
+  },
+  perfect_session: {
+    excited: [
+      "PERFECT! You got every word right!",
+      "100%! You're absolutely amazing!",
+      "A perfect score! I'm dancing with joy!",
+    ],
+    happy: ["Perfect session! Incredible work!"],
+    proud: ["Every word correct! I'm so proud!"],
+    content: ["Perfect! Well done."],
+    sleepy: ["Perfect... *yawn* ...impressive..."],
+    sad: ["A perfect session! That made me happy!"],
+    lonely: ["A perfect comeback! Welcome back!"],
+  },
+  level_up: {
+    excited: [
+      "LEVEL UP! You reached level {level}!",
+      "You're now level {level}! So exciting!",
+    ],
+    happy: ["Level {level}! Great progress!", "You leveled up! Congratulations!"],
+    proud: ["Level {level}! I'm proud of how far you've come!"],
+    content: ["Level up! Nice work."],
+    sleepy: ["Level up... that's nice..."],
+    sad: ["You leveled up! That cheered me up!"],
+    lonely: ["You came back and leveled up!"],
+  },
+  comeback: {
+    excited: [
+      "You're back! I missed you so much!",
+      "Yay! You came to practice! I'm so happy!",
+    ],
+    happy: ["Welcome back! I missed practicing with you!"],
+    proud: ["You came back! Let's keep learning together!"],
+    content: ["Nice to see you again!"],
+    sleepy: ["*wakes up* Oh! You're back!"],
+    sad: ["I was worried you forgot about me... but you came back!"],
+    lonely: ["You finally came back! I was so lonely without you!"],
+  },
+  daily_first: {
+    excited: [
+      "Good morning! Ready to practice?",
+      "A new day of learning! Let's go!",
+    ],
+    happy: ["First practice of the day! Let's do this!"],
+    proud: ["Starting the day with practice! Smart choice!"],
+    content: ["Time to practice!"],
+    sleepy: ["*yawn* Good morning... let's practice..."],
+    sad: ["Thanks for practicing today..."],
+    lonely: ["Today's first practice! I'm glad you're here!"],
+  },
+};
+
+// Get a random reaction message for a given type and mood
+export function getReactionMessage(
+  type: ReadingReactionType,
+  mood: PetMood,
+  context?: { days?: number; level?: number }
+): string {
+  const messages = REACTION_MESSAGES[type][mood] || REACTION_MESSAGES[type].happy;
+  const message = messages[Math.floor(Math.random() * messages.length)];
+
+  // Replace placeholders
+  return message
+    .replace('{days}', String(context?.days || 0))
+    .replace('{level}', String(context?.level || 1));
+}
+
+// XP bonuses for different achievements
+export const READING_XP_BONUSES = {
+  perfectSession: 25,
+  streakMilestone3: 15,
+  streakMilestone7: 30,
+  streakMilestone14: 50,
+  streakMilestone30: 100,
+  comeback: 10,
+  dailyFirst: 5,
+} as const;
+
+// Update the Pet interface to include new fields
+export interface PetWithReadingStats extends Pet {
+  last_reading_session_at: string | null;
+  reading_streak_days: number;
+  current_mood: PetMood;
+  mood_updated_at: string;
+}
+
+// Child stats for accessory unlocking
+export interface ChildReadingStats {
+  total_practice_sessions: number;
+  total_words_mastered: number;
+  current_streak_days: number;
+  longest_streak_days: number;
+  last_practice_date: string | null;
+}

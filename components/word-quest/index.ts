@@ -9,3 +9,8 @@ export { PetCustomizationForm } from './PetCustomizationForm'
 export { PetHabitat } from './PetHabitat'
 export { HabitatSelector } from './HabitatSelector'
 export { TrickPerformer } from './TrickPerformer'
+// Phase 4 & 5 exports
+export { AccessoryInventory } from './AccessoryInventory'
+export { AccessoryUnlockModal, BatchUnlockModal } from './AccessoryUnlockModal'
+export { ReadingReactionDisplay, MiniReactionBubble, PetMoodIndicator } from './ReadingReactionDisplay'
+export { PostSessionPetReaction, MiniPetReaction } from './PostSessionPetReaction'

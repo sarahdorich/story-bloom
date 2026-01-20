@@ -13,6 +13,7 @@ import {
   ProgressBar,
   SuccessAnimation,
   PetRewardModal,
+  PostSessionPetReaction,
 } from '@/components/word-quest'
 import type { Pet, PetType, PetCustomization } from '@/lib/types'
 import { PET_MAPPINGS } from '@/lib/types'
@@ -26,6 +27,7 @@ export default function PracticePage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [isAdvancing, setIsAdvancing] = useState(false)
   const [showPetReward, setShowPetReward] = useState(false)
+  const [showPetReaction, setShowPetReaction] = useState(false)
   const [newPet, setNewPet] = useState<Pet | null>(null)
   const [isFirstPet, setIsFirstPet] = useState(false)
   const [rewardPetType, setRewardPetType] = useState<PetType>('cat')
@@ -48,7 +50,7 @@ export default function PracticePage() {
     wordsPerSession: 10,
   })
 
-  const { pets, createPetWithCustomization, pollImageStatus } = usePets({ childId: selectedChild?.id || '' })
+  const { pets, favoritePet, createPetWithCustomization, pollImageStatus } = usePets({ childId: selectedChild?.id || '' })
 
   // Determine pet type from child's favorite things
   const selectPetTypeFromFavorites = useCallback((favoriteThings: string[]): PetType => {
@@ -301,20 +303,41 @@ export default function PracticePage() {
 
       {/* Success Animation */}
       <SuccessAnimation
-        show={showSuccess && !showPetReward}
+        show={showSuccess && !showPetReward && !showPetReaction}
         wordsCorrect={wordsCorrect}
         totalWords={words.length}
         onComplete={() => {
+          setShowSuccess(false)
           if (isFirstPet) {
-            setShowSuccess(false)
+            // New pet flow for first-time users
             setShowPetReward(true)
+          } else if (favoritePet) {
+            // Show pet reaction for existing pet owners
+            setShowPetReaction(true)
           } else {
             router.push('/word-quest')
           }
         }}
       />
 
-      {/* Pet Reward Modal */}
+      {/* Pet Reaction for existing pets */}
+      {favoritePet && selectedChild && (
+        <PostSessionPetReaction
+          pet={favoritePet}
+          childId={selectedChild.id}
+          sessionData={{
+            wordsPracticed: words.length,
+            wordsCorrect: wordsCorrect,
+          }}
+          show={showPetReaction}
+          onComplete={() => {
+            setShowPetReaction(false)
+            router.push('/word-quest')
+          }}
+        />
+      )}
+
+      {/* Pet Reward Modal for first pet */}
       <PetRewardModal
         show={showPetReward}
         pet={newPet}
