@@ -7,6 +7,13 @@ import type {
   PetType,
   PetCustomization,
   ImageGenerationStatus,
+  Accessory,
+  ChildAccessory,
+  PetEquippedAccessory,
+  AccessoryType,
+  PetMood,
+  ReadingReactionType,
+  PetReadingReaction,
 } from '@/lib/types';
 
 interface UsePetsOptions {
@@ -28,6 +35,41 @@ interface InteractionResult {
 interface ImageGenerationStatusResult {
   status: ImageGenerationStatus;
   imageUrl: string | null;
+}
+
+interface ReadingReaction {
+  type: ReadingReactionType;
+  mood: PetMood;
+  message: string;
+  xpBonus: number;
+}
+
+interface ReadingReactionResult {
+  reactions: ReadingReaction[];
+  totalXpBonus: number;
+  newStreak: number;
+  currentMood: PetMood;
+  newHappiness: number;
+}
+
+interface AccessoriesData {
+  accessories: Accessory[];
+  unlockedAccessories: ChildAccessory[];
+  stats: {
+    sessions: number;
+    wordsMastered: number;
+    streakDays: number;
+    level: number;
+  };
+}
+
+interface PetReactionData {
+  pet: Pet & {
+    current_mood: PetMood;
+    effective_happiness: number;
+    days_since_last_practice: number;
+  };
+  reactions: PetReadingReaction[];
 }
 
 interface UsePetsReturn {
@@ -55,6 +97,25 @@ interface UsePetsReturn {
     onComplete?: (imageUrl: string) => void
   ) => () => void;
   favoritePet: Pet | null;
+  // Phase 4: Accessories
+  fetchAccessories: () => Promise<AccessoriesData | null>;
+  unlockAccessory: (accessoryId: string, source?: string) => Promise<ChildAccessory | null>;
+  equipAccessory: (petId: string, accessoryId: string, slot: AccessoryType) => Promise<PetEquippedAccessory | null>;
+  unequipAccessory: (petId: string, slot: AccessoryType) => Promise<boolean>;
+  fetchEquippedAccessories: (petId: string) => Promise<PetEquippedAccessory[]>;
+  // Phase 5: Reading Reactions
+  logReadingSession: (
+    petId: string,
+    sessionData: {
+      practiceSessionId?: string;
+      wordsPracticed: number;
+      wordsCorrect: number;
+      wordsMastered?: number;
+      petLeveledUp?: boolean;
+      newLevel?: number;
+    }
+  ) => Promise<ReadingReactionResult | null>;
+  fetchPetMood: (petId: string) => Promise<PetReactionData | null>;
 }
 
 export function usePets({ childId }: UsePetsOptions): UsePetsReturn {
@@ -331,6 +392,187 @@ export function usePets({ childId }: UsePetsOptions): UsePetsReturn {
     []
   );
 
+  // ==========================================
+  // Phase 4: Accessory Functions
+  // ==========================================
+
+  const fetchAccessories = useCallback(async (): Promise<AccessoriesData | null> => {
+    if (!childId) return null;
+
+    try {
+      const response = await fetch(`/api/word-quest/accessories?childId=${childId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch accessories');
+      }
+      return await response.json();
+    } catch (err) {
+      console.error('Error fetching accessories:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch accessories');
+      return null;
+    }
+  }, [childId]);
+
+  const unlockAccessory = useCallback(
+    async (accessoryId: string, source: string = 'achievement'): Promise<ChildAccessory | null> => {
+      if (!childId) return null;
+
+      try {
+        const response = await fetch('/api/word-quest/accessories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ childId, accessoryId, source }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to unlock accessory');
+        }
+
+        const data = await response.json();
+        return data.unlockedAccessory || null;
+      } catch (err) {
+        console.error('Error unlocking accessory:', err);
+        setError(err instanceof Error ? err.message : 'Failed to unlock accessory');
+        return null;
+      }
+    },
+    [childId]
+  );
+
+  const equipAccessory = useCallback(
+    async (
+      petId: string,
+      accessoryId: string,
+      slot: AccessoryType
+    ): Promise<PetEquippedAccessory | null> => {
+      try {
+        const response = await fetch(`/api/word-quest/pets/${petId}/accessories`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessoryId, slot }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to equip accessory');
+        }
+
+        const data = await response.json();
+        return data.equippedAccessory || null;
+      } catch (err) {
+        console.error('Error equipping accessory:', err);
+        setError(err instanceof Error ? err.message : 'Failed to equip accessory');
+        return null;
+      }
+    },
+    []
+  );
+
+  const unequipAccessory = useCallback(
+    async (petId: string, slot: AccessoryType): Promise<boolean> => {
+      try {
+        const response = await fetch(`/api/word-quest/pets/${petId}/accessories`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slot }),
+        });
+
+        return response.ok;
+      } catch (err) {
+        console.error('Error unequipping accessory:', err);
+        setError(err instanceof Error ? err.message : 'Failed to unequip accessory');
+        return false;
+      }
+    },
+    []
+  );
+
+  const fetchEquippedAccessories = useCallback(
+    async (petId: string): Promise<PetEquippedAccessory[]> => {
+      try {
+        const response = await fetch(`/api/word-quest/pets/${petId}/accessories`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch equipped accessories');
+        }
+        const data = await response.json();
+        return data.equippedAccessories || [];
+      } catch (err) {
+        console.error('Error fetching equipped accessories:', err);
+        return [];
+      }
+    },
+    []
+  );
+
+  // ==========================================
+  // Phase 5: Reading Reaction Functions
+  // ==========================================
+
+  const logReadingSession = useCallback(
+    async (
+      petId: string,
+      sessionData: {
+        practiceSessionId?: string;
+        wordsPracticed: number;
+        wordsCorrect: number;
+        wordsMastered?: number;
+        petLeveledUp?: boolean;
+        newLevel?: number;
+      }
+    ): Promise<ReadingReactionResult | null> => {
+      try {
+        const response = await fetch(`/api/word-quest/pets/${petId}/reactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sessionData),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to log reading session');
+        }
+
+        const result: ReadingReactionResult = await response.json();
+
+        // Update the pet's mood in local state
+        setPets((prev) =>
+          prev.map((p) =>
+            p.id === petId
+              ? {
+                  ...p,
+                  happiness: result.newHappiness,
+                  // Note: current_mood would need to be added to Pet type
+                }
+              : p
+          )
+        );
+
+        return result;
+      } catch (err) {
+        console.error('Error logging reading session:', err);
+        setError(err instanceof Error ? err.message : 'Failed to log reading session');
+        return null;
+      }
+    },
+    []
+  );
+
+  const fetchPetMood = useCallback(
+    async (petId: string): Promise<PetReactionData | null> => {
+      try {
+        const response = await fetch(`/api/word-quest/pets/${petId}/reactions`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch pet mood');
+        }
+        return await response.json();
+      } catch (err) {
+        console.error('Error fetching pet mood:', err);
+        return null;
+      }
+    },
+    []
+  );
+
   // Auto-fetch pets when childId changes
   useEffect(() => {
     if (childId) {
@@ -352,5 +594,14 @@ export function usePets({ childId }: UsePetsOptions): UsePetsReturn {
     generatePetImage,
     pollImageStatus,
     favoritePet,
+    // Phase 4: Accessories
+    fetchAccessories,
+    unlockAccessory,
+    equipAccessory,
+    unequipAccessory,
+    fetchEquippedAccessories,
+    // Phase 5: Reading Reactions
+    logReadingSession,
+    fetchPetMood,
   };
 }

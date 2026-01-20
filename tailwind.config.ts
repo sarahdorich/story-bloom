@@ -11,6 +11,62 @@ const config: Config = {
       fontFamily: {
         sans: ['Nunito', 'sans-serif'],
       },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in-down': {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'scale-in': {
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'spin-in': {
+          '0%': { opacity: '0', transform: 'rotate(-180deg) scale(0.5)' },
+          '100%': { opacity: '1', transform: 'rotate(0deg) scale(1)' },
+        },
+        'bounce-in': {
+          '0%': { opacity: '0', transform: 'scale(0.3)' },
+          '50%': { transform: 'scale(1.05)' },
+          '70%': { transform: 'scale(0.9)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'bounce-slow': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
+        },
+        'float-up': {
+          '0%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+          '100%': { opacity: '0', transform: 'translateY(-100px) scale(0.5)' },
+        },
+        confetti: {
+          '0%': { opacity: '1', transform: 'translateY(0) rotate(0deg)' },
+          '100%': { opacity: '0', transform: 'translateY(-200px) rotate(720deg)' },
+        },
+        sparkle: {
+          '0%, 100%': { opacity: '0', transform: 'scale(0)' },
+          '50%': { opacity: '1', transform: 'scale(1)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.3s ease-out',
+        'fade-in-up': 'fade-in-up 0.4s ease-out forwards',
+        'fade-in-down': 'fade-in-down 0.4s ease-out forwards',
+        'scale-in': 'scale-in 0.3s ease-out forwards',
+        'spin-in': 'spin-in 0.6s ease-out forwards',
+        'bounce-in': 'bounce-in 0.5s ease-out forwards',
+        'bounce-slow': 'bounce-slow 2s ease-in-out infinite',
+        'float-up': 'float-up 2s ease-out forwards',
+        confetti: 'confetti 2s ease-out forwards',
+        sparkle: 'sparkle 1.5s ease-in-out infinite',
+      },
       colors: {
         primary: {
           50: '#fdf4ff',
