@@ -8,6 +8,7 @@ interface PetHabitatProps {
   pet: Pet;
   children?: ReactNode;
   showStats?: boolean;
+  trickAnimationClass?: string;
 }
 
 const PET_EMOJIS: Record<PetType, string> = {
@@ -121,6 +122,7 @@ export function PetHabitat({
   pet,
   children,
   showStats = true,
+  trickAnimationClass,
 }: PetHabitatProps) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isBlinking, setIsBlinking] = useState(false);
@@ -218,7 +220,7 @@ export function PetHabitat({
       {/* Pet Container */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px]">
         {/* Pet Image/Emoji with animations */}
-        <div className={`relative ${animationClass}`}>
+        <div className={`relative ${trickAnimationClass || animationClass}`}>
           {pet.image_url ? (
             <img
               src={pet.image_url}

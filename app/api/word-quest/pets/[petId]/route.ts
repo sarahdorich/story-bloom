@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type { HabitatType } from '@/lib/types'
 
 interface RouteParams {
   params: Promise<{ petId: string }>
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 interface UpdatePetBody {
   name?: string
   is_favorite?: boolean
+  habitat_type?: HabitatType
 }
 
 // PATCH: Update a pet
@@ -63,6 +65,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const updates: Record<string, unknown> = {}
     if (body.name !== undefined) updates.name = body.name
     if (body.is_favorite !== undefined) updates.is_favorite = body.is_favorite
+    if (body.habitat_type !== undefined) updates.habitat_type = body.habitat_type
 
     const { data: pet, error } = await supabase
       .from('pets')

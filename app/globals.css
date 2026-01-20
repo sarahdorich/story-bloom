@@ -90,13 +90,200 @@
   transform-origin: center bottom;
 }
 
+/* ============================================
+   Pet Trick Animations (Phase 3)
+   ============================================ */
+
+/* Spin animation - for roll over, chase tail, spiral */
+@keyframes trick-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Bounce animation - for barks, meows, hops */
+@keyframes trick-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-15px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  75% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pounce animation - for jumps, catches */
+@keyframes trick-pounce {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  30% {
+    transform: scale(0.9) translateY(5px);
+  }
+  60% {
+    transform: scale(1.1) translateY(-25px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Dance animation - for dances, celebrations */
+@keyframes trick-dance {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-8px) rotate(-8deg);
+  }
+  50% {
+    transform: translateX(8px) rotate(8deg);
+  }
+  75% {
+    transform: translateX(-4px) rotate(-4deg);
+  }
+}
+
+/* Sparkle/magic animation - for magic tricks, special abilities */
+@keyframes trick-sparkle {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.9;
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+    transform: scale(1.05);
+  }
+  50% {
+    opacity: 0.85;
+    filter: brightness(1.4) drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+    transform: scale(1.1);
+  }
+  75% {
+    opacity: 0.9;
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+    transform: scale(1.05);
+  }
+}
+
+/* Pulse animation - for purrs, resting, subtle movements */
+@keyframes trick-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Stretch animation - for stretches, yawns */
+@keyframes trick-stretch {
+  0%, 100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  50% {
+    transform: scaleX(1.15) scaleY(0.92);
+  }
+}
+
+/* Wag animation - for tail wags, waves (single cycle) */
+@keyframes trick-wag {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  40% {
+    transform: rotate(12deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(8deg);
+  }
+}
+
+/* Float animation - for flying, swimming (single cycle) */
+@keyframes trick-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-20px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(3deg);
+  }
+  75% {
+    transform: translateY(-25px) rotate(-2deg);
+  }
+}
+
+/* Trick animation classes (single play, not infinite) */
+.animate-trick-spin {
+  animation: trick-spin 1s ease-in-out forwards;
+}
+
+.animate-trick-bounce {
+  animation: trick-bounce 0.8s ease-in-out forwards;
+}
+
+.animate-trick-pounce {
+  animation: trick-pounce 1s ease-in-out forwards;
+}
+
+.animate-trick-dance {
+  animation: trick-dance 1.5s ease-in-out forwards;
+}
+
+.animate-trick-sparkle {
+  animation: trick-sparkle 2s ease-in-out forwards;
+}
+
+.animate-trick-pulse {
+  animation: trick-pulse 1.5s ease-in-out forwards;
+}
+
+.animate-trick-stretch {
+  animation: trick-stretch 1.5s ease-in-out forwards;
+}
+
+.animate-trick-wag {
+  animation: trick-wag 1s ease-in-out forwards;
+}
+
+.animate-trick-float {
+  animation: trick-float 2s ease-in-out forwards;
+}
+
 /* Respect user's reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .animate-pet-breathe,
   .animate-pet-float,
   .animate-pet-float-slow,
   .animate-pet-bounce-gentle,
-  .animate-pet-wag {
+  .animate-pet-wag,
+  .animate-trick-spin,
+  .animate-trick-bounce,
+  .animate-trick-pounce,
+  .animate-trick-dance,
+  .animate-trick-sparkle,
+  .animate-trick-pulse,
+  .animate-trick-stretch,
+  .animate-trick-wag,
+  .animate-trick-float {
     animation: none;
   }
 }
