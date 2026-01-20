@@ -48,7 +48,7 @@ export default function PracticePage() {
     wordsPerSession: 10,
   })
 
-  const { pets, createPetWithCustomization } = usePets({ childId: selectedChild?.id || '' })
+  const { pets, createPetWithCustomization, pollImageStatus } = usePets({ childId: selectedChild?.id || '' })
 
   // Determine pet type from child's favorite things
   const selectPetTypeFromFavorites = useCallback((favoriteThings: string[]): PetType => {
@@ -327,6 +327,7 @@ export default function PracticePage() {
           }
         }}
         onCreatePet={handleCreatePet}
+        pollImageStatus={pollImageStatus}
       />
     </div>
   )

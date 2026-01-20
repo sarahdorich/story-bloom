@@ -547,3 +547,199 @@ export const POINTS_SYSTEM = {
   dailyGoalBonus: 20,
   streakBonus: 5,
 } as const;
+
+// Pet Trick System (Phase 3)
+export interface PetTrick {
+  id: string;
+  pet_id: string;
+  trick_name: string;
+  times_performed: number;
+  mastery_level: number; // 0-5
+  last_performed_at: string | null;
+  created_at: string;
+}
+
+// XP rewards for performing tricks
+export const TRICK_XP_REWARDS = {
+  base: 10, // Base XP for performing a trick
+  streak3Bonus: 25, // Bonus XP for performing 3 tricks in a row
+  masteryBonus: 5, // Extra XP per mastery level
+} as const;
+
+// Animation duration in milliseconds for each trick animation
+export const TRICK_ANIMATION_DURATIONS: Record<string, number> = {
+  'animate-trick-spin': 1000,
+  'animate-trick-bounce': 800,
+  'animate-trick-pounce': 1000,
+  'animate-trick-dance': 1500,
+  'animate-trick-sparkle': 2000,
+  'animate-trick-pulse': 1500,
+  'animate-trick-stretch': 1500,
+  'animate-trick-wag': 1000,
+  'animate-trick-float': 2000,
+};
+
+// Map tricks to their CSS animation classes
+export const TRICK_ANIMATIONS: Record<string, string> = {
+  // Cat tricks
+  purr: 'animate-trick-pulse',
+  meow: 'animate-trick-bounce',
+  stretch: 'animate-trick-stretch',
+  yawn: 'animate-trick-stretch',
+  chase_tail: 'animate-trick-spin',
+  pounce: 'animate-trick-pounce',
+  nap_sunny_spot: 'animate-trick-pulse',
+  bring_gift: 'animate-trick-bounce',
+  knead: 'animate-trick-pulse',
+  acrobatic_jump: 'animate-trick-pounce',
+  hide_and_seek: 'animate-trick-bounce',
+  sing_song: 'animate-trick-dance',
+  dance: 'animate-trick-dance',
+  magic_trick: 'animate-trick-sparkle',
+
+  // Dog tricks
+  bark: 'animate-trick-bounce',
+  wag_tail: 'animate-trick-wag',
+  sit: 'animate-trick-bounce',
+  roll_over: 'animate-trick-spin',
+  fetch: 'animate-trick-pounce',
+  shake_paw: 'animate-trick-bounce',
+  play_dead: 'animate-trick-pulse',
+  catch_frisbee: 'animate-trick-pounce',
+  dig: 'animate-trick-bounce',
+  do_tricks: 'animate-trick-dance',
+  howl_song: 'animate-trick-stretch',
+  skateboard: 'animate-trick-bounce',
+  superhero_pose: 'animate-trick-sparkle',
+
+  // Dinosaur tricks
+  roar: 'animate-trick-bounce',
+  stomp: 'animate-trick-bounce',
+  tail_wag: 'animate-trick-wag',
+  sniff: 'animate-trick-pulse',
+  dig_bones: 'animate-trick-bounce',
+  run_fast: 'animate-trick-pounce',
+  eat_leaves: 'animate-trick-pulse',
+  splash_water: 'animate-trick-bounce',
+  find_treasure: 'animate-trick-sparkle',
+  make_friends: 'animate-trick-dance',
+  climb_mountain: 'animate-trick-pounce',
+  fly_short_distance: 'animate-trick-float',
+  dino_dance: 'animate-trick-dance',
+  time_travel: 'animate-trick-sparkle',
+  legendary_roar: 'animate-trick-sparkle',
+
+  // Unicorn tricks
+  sparkle: 'animate-trick-sparkle',
+  neigh: 'animate-trick-bounce',
+  prance: 'animate-trick-bounce',
+  toss_mane: 'animate-trick-wag',
+  rainbow_trail: 'animate-trick-sparkle',
+  flutter: 'animate-trick-float',
+  magic_sparkle: 'animate-trick-sparkle',
+  grant_wish: 'animate-trick-sparkle',
+  fly_low: 'animate-trick-float',
+  rainbow_jump: 'animate-trick-pounce',
+  starlight_dance: 'animate-trick-dance',
+  aurora_display: 'animate-trick-sparkle',
+  dream_weaving: 'animate-trick-sparkle',
+  rainbow_magic: 'animate-trick-sparkle',
+
+  // Dragon tricks
+  growl: 'animate-trick-bounce',
+  puff_smoke: 'animate-trick-pulse',
+  flap_wings: 'animate-trick-float',
+  curl_tail: 'animate-trick-wag',
+  small_flame: 'animate-trick-sparkle',
+  glide: 'animate-trick-float',
+  treasure_hunt: 'animate-trick-sparkle',
+  fire_breath: 'animate-trick-sparkle',
+  fly_circle: 'animate-trick-spin',
+  loop_de_loop: 'animate-trick-spin',
+  fire_juggle: 'animate-trick-dance',
+  sky_dance: 'animate-trick-dance',
+  storm_summon: 'animate-trick-sparkle',
+  dragon_magic: 'animate-trick-sparkle',
+
+  // Bunny tricks
+  hop: 'animate-trick-bounce',
+  wiggle_nose: 'animate-trick-pulse',
+  binky: 'animate-trick-pounce',
+  thump: 'animate-trick-bounce',
+  zoom: 'animate-trick-pounce',
+  flop_over: 'animate-trick-spin',
+  find_carrots: 'animate-trick-bounce',
+  groom: 'animate-trick-pulse',
+  high_jump: 'animate-trick-pounce',
+  bunny_dance: 'animate-trick-dance',
+  magic_hop: 'animate-trick-sparkle',
+  disappear_trick: 'animate-trick-sparkle',
+  rainbow_hop: 'animate-trick-sparkle',
+
+  // Bear tricks
+  wave: 'animate-trick-wag',
+  scratch: 'animate-trick-pulse',
+  catch_fish: 'animate-trick-pounce',
+  berry_hunt: 'animate-trick-bounce',
+  climb_tree: 'animate-trick-pounce',
+  splash: 'animate-trick-bounce',
+  honey_dance: 'animate-trick-dance',
+  forest_song: 'animate-trick-pulse',
+  star_gaze: 'animate-trick-sparkle',
+  nature_magic: 'animate-trick-sparkle',
+  forest_guardian: 'animate-trick-sparkle',
+
+  // Bird tricks
+  chirp: 'animate-trick-bounce',
+  flap: 'animate-trick-float',
+  preen: 'animate-trick-pulse',
+  fly_short: 'animate-trick-float',
+  sing: 'animate-trick-bounce',
+  fetch_shiny: 'animate-trick-sparkle',
+  acrobatic_fly: 'animate-trick-spin',
+  whistle: 'animate-trick-bounce',
+  loop_flight: 'animate-trick-spin',
+  dawn_chorus: 'animate-trick-dance',
+  rainbow_feathers: 'animate-trick-sparkle',
+  phoenix_glow: 'animate-trick-sparkle',
+
+  // Fish tricks
+  bubble: 'animate-trick-pulse',
+  swim: 'animate-trick-float',
+  hide: 'animate-trick-pulse',
+  jump: 'animate-trick-pounce',
+  shimmer: 'animate-trick-sparkle',
+  treasure_find: 'animate-trick-sparkle',
+  synchronized_swim: 'animate-trick-dance',
+  glow: 'animate-trick-sparkle',
+  coral_dance: 'animate-trick-dance',
+  wave_ride: 'animate-trick-float',
+  ocean_song: 'animate-trick-pulse',
+  bioluminescent: 'animate-trick-sparkle',
+  ocean_magic: 'animate-trick-sparkle',
+
+  // Butterfly tricks
+  land: 'animate-trick-pulse',
+  spiral: 'animate-trick-spin',
+  rest: 'animate-trick-pulse',
+  flower_dance: 'animate-trick-dance',
+  pollen_trail: 'animate-trick-sparkle',
+  rainbow_wings: 'animate-trick-sparkle',
+  float: 'animate-trick-float',
+  garden_tour: 'animate-trick-float',
+  sky_ballet: 'animate-trick-dance',
+  starlight_wings: 'animate-trick-sparkle',
+  metamorphosis: 'animate-trick-sparkle',
+  fairy_magic: 'animate-trick-sparkle',
+};
+
+// Get animation class for a trick, with default fallback
+export function getTrickAnimation(trickName: string): string {
+  return TRICK_ANIMATIONS[trickName] || 'animate-trick-bounce';
+}
+
+// Get animation duration for a trick
+export function getTrickAnimationDuration(trickName: string): number {
+  const animationClass = getTrickAnimation(trickName);
+  return TRICK_ANIMATION_DURATIONS[animationClass] || 1000;
+}

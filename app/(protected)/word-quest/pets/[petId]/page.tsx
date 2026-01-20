@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, useCallback, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useChild } from '../../../ProtectedLayoutClient';
-import { PetHabitat } from '@/components/word-quest';
+import { PetHabitat, HabitatSelector, TrickPerformer } from '@/components/word-quest';
 import { Card } from '@/components/ui';
-import type { Pet, InteractionType } from '@/lib/types';
-import { XP_PER_LEVEL } from '@/lib/types';
+import type { Pet, InteractionType, HabitatType, PetType, ImageGenerationStatus } from '@/lib/types';
+import { XP_PER_LEVEL, PET_DEFAULT_HABITATS } from '@/lib/types';
 
 interface PageProps {
   params: Promise<{ petId: string }>;
@@ -32,6 +32,11 @@ export default function PetDetailPage({ params }: PageProps) {
   const [petResponse, setPetResponse] = useState<string | null>(null);
   const [isInteracting, setIsInteracting] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [showHabitatSelector, setShowHabitatSelector] = useState(false);
+  const [isChangingHabitat, setIsChangingHabitat] = useState(false);
+  const [trickAnimationClass, setTrickAnimationClass] = useState<string | null>(null);
+  const [newBehaviorsUnlocked, setNewBehaviorsUnlocked] = useState<string[]>([]);
+  const imagePollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchPet = useCallback(async () => {
     try {
@@ -51,6 +56,74 @@ export default function PetDetailPage({ params }: PageProps) {
   useEffect(() => {
     fetchPet();
   }, [fetchPet]);
+
+  // Poll for image generation completion
+  useEffect(() => {
+    if (
+      pet &&
+      (pet.image_generation_status === 'generating' ||
+        pet.image_generation_status === 'pending') &&
+      !pet.image_url
+    ) {
+      let pollCount = 0;
+      const maxPolls = 30; // ~60 seconds with 2s interval
+
+      const poll = async () => {
+        pollCount++;
+        try {
+          const response = await fetch(
+            `/api/word-quest/pets/${petId}/generate-image`
+          );
+          const result: { status: ImageGenerationStatus; imageUrl: string | null } =
+            await response.json();
+
+          if (result.status === 'completed' && result.imageUrl) {
+            // Update pet with new image
+            setPet((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    image_url: result.imageUrl,
+                    image_generation_status: 'completed',
+                  }
+                : null
+            );
+            // Stop polling
+            if (imagePollingRef.current) {
+              clearInterval(imagePollingRef.current);
+              imagePollingRef.current = null;
+            }
+          } else if (result.status === 'failed' || pollCount >= maxPolls) {
+            // Stop polling on failure or timeout
+            if (imagePollingRef.current) {
+              clearInterval(imagePollingRef.current);
+              imagePollingRef.current = null;
+            }
+            if (result.status === 'failed') {
+              setPet((prev) =>
+                prev
+                  ? { ...prev, image_generation_status: 'failed' }
+                  : null
+              );
+            }
+          }
+        } catch (err) {
+          console.error('Error polling image status:', err);
+        }
+      };
+
+      // Start polling
+      imagePollingRef.current = setInterval(poll, 2000);
+      poll(); // Poll immediately
+
+      return () => {
+        if (imagePollingRef.current) {
+          clearInterval(imagePollingRef.current);
+          imagePollingRef.current = null;
+        }
+      };
+    }
+  }, [pet?.id, pet?.image_generation_status, pet?.image_url, petId]);
 
   const handleInteract = async (interaction: InteractionType) => {
     if (!pet || isInteracting) return;
@@ -85,6 +158,49 @@ export default function PetDetailPage({ params }: PageProps) {
     } finally {
       setIsInteracting(false);
     }
+  };
+
+  const handleHabitatChange = async (habitat: HabitatType) => {
+    if (!pet) return;
+
+    setIsChangingHabitat(true);
+    try {
+      const response = await fetch(`/api/word-quest/pets/${petId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ habitat_type: habitat }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update habitat');
+      }
+
+      const { pet: updatedPet } = await response.json();
+      setPet(updatedPet);
+      setShowHabitatSelector(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change habitat');
+    } finally {
+      setIsChangingHabitat(false);
+    }
+  };
+
+  const handleTrickStart = (trickName: string, animationClass: string) => {
+    setTrickAnimationClass(animationClass);
+    setPetResponse(null); // Clear any existing response
+  };
+
+  const handleTrickEnd = () => {
+    setTrickAnimationClass(null);
+  };
+
+  const handleTrickLevelUp = (newLevel: number, newBehaviors: string[]) => {
+    setShowLevelUp(true);
+    setNewBehaviorsUnlocked(newBehaviors);
+    setTimeout(() => {
+      setShowLevelUp(false);
+      setNewBehaviorsUnlocked([]);
+    }, 3000);
   };
 
   if (!selectedChild) {
@@ -126,7 +242,34 @@ export default function PetDetailPage({ params }: PageProps) {
           </svg>
           <span className="text-sm font-medium">Back</span>
         </button>
-        <div className="w-16" />
+        {pet && (
+          <button
+            onClick={() => setShowHabitatSelector(true)}
+            className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Change habitat"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <span className="text-sm font-medium hidden sm:inline">Habitat</span>
+          </button>
+        )}
       </div>
 
       {/* Loading State */}
@@ -158,6 +301,11 @@ export default function PetDetailPage({ params }: PageProps) {
             <div className="text-sm opacity-90">
               {pet?.name} is now level {pet?.level}!
             </div>
+            {newBehaviorsUnlocked.length > 0 && (
+              <div className="mt-2 text-sm opacity-90">
+                New tricks: {newBehaviorsUnlocked.map(b => b.replace(/_/g, ' ')).join(', ')}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -166,7 +314,7 @@ export default function PetDetailPage({ params }: PageProps) {
       {!isLoading && !error && pet && (
         <div className="max-w-md mx-auto space-y-4">
           {/* Habitat Container */}
-          <PetHabitat pet={pet} showStats={true}>
+          <PetHabitat pet={pet} showStats={true} trickAnimationClass={trickAnimationClass || undefined}>
             {/* Pet Response Speech Bubble (inside habitat) */}
             {petResponse && (
               <div className="absolute bottom-4 left-4 right-4 z-20">
@@ -232,25 +380,26 @@ export default function PetDetailPage({ params }: PageProps) {
             ))}
           </div>
 
-          {/* Unlocked Behaviors */}
-          {pet.unlocked_behaviors && pet.unlocked_behaviors.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                Unlocked Tricks
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {pet.unlocked_behaviors.map((behavior) => (
-                  <span
-                    key={behavior}
-                    className="px-2 py-1 bg-primary-50 text-primary-700 rounded-full text-xs capitalize"
-                  >
-                    {behavior.replace(/_/g, ' ')}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Trick Performer */}
+          <TrickPerformer
+            pet={pet}
+            onTrickStart={handleTrickStart}
+            onTrickEnd={handleTrickEnd}
+            onPetUpdate={setPet}
+            onLevelUp={handleTrickLevelUp}
+          />
         </div>
+      )}
+
+      {/* Habitat Selector Modal */}
+      {showHabitatSelector && pet && (
+        <HabitatSelector
+          currentHabitat={pet.habitat_type || PET_DEFAULT_HABITATS[pet.pet_type as PetType]}
+          petType={pet.pet_type as PetType}
+          onSelect={handleHabitatChange}
+          onClose={() => setShowHabitatSelector(false)}
+          isLoading={isChangingHabitat}
+        />
       )}
     </div>
   );
