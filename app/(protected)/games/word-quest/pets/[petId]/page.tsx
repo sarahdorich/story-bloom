@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { useChild } from '../../../ProtectedLayoutClient';
+import { useChild } from '../../../../ProtectedLayoutClient';
 import { PetHabitat, HabitatSelector, TrickPerformer } from '@/components/word-quest';
 import { Card } from '@/components/ui';
 import { useSpeechSynthesis } from '@/lib/hooks/useSpeechSynthesis';
@@ -222,7 +222,7 @@ export default function PetDetailPage({ params }: PageProps) {
   };
 
   if (!selectedChild) {
-    router.push('/word-quest');
+    router.push('/games/word-quest');
     return null;
   }
 
@@ -242,7 +242,7 @@ export default function PetDetailPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
-          onClick={() => router.push('/word-quest/pets')}
+          onClick={() => router.push('/games/word-quest/pets')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
           <svg
@@ -302,7 +302,7 @@ export default function PetDetailPage({ params }: PageProps) {
         <Card className="text-center py-8">
           <p className="text-red-500 mb-4">{error}</p>
           <button
-            onClick={() => router.push('/word-quest/pets')}
+            onClick={() => router.push('/games/word-quest/pets')}
             className="text-primary-600 hover:underline"
           >
             Go Back
