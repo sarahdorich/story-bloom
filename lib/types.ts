@@ -923,6 +923,9 @@ export interface PetReadingReaction {
 // Streak milestone thresholds for special reactions
 export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100] as const;
 
+// Score threshold (percentage) to earn a new pet reward
+export const PET_REWARD_SCORE_THRESHOLD = 90;
+
 // Happiness decay rate per day without practice (minimum 20)
 export const HAPPINESS_DECAY_PER_DAY = 5;
 export const MINIMUM_HAPPINESS = 20;

@@ -222,7 +222,7 @@ export function PetRewardModal({
             <p className="text-gray-500 text-sm mb-6">
               {isFirstPet
                 ? "Great job reading! You've earned a special friend!"
-                : 'Keep practicing to unlock more pets!'}
+                : 'Amazing score! You earned a new friend!'}
             </p>
 
             {/* Pet Type Display */}
