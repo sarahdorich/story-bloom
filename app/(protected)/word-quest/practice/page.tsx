@@ -16,7 +16,7 @@ import {
   PostSessionPetReaction,
 } from '@/components/word-quest'
 import type { Pet, PetType, PetCustomization } from '@/lib/types'
-import { PET_MAPPINGS } from '@/lib/types'
+import { PET_MAPPINGS, PET_REWARD_SCORE_THRESHOLD } from '@/lib/types'
 
 export default function PracticePage() {
   const router = useRouter()
@@ -30,6 +30,7 @@ export default function PracticePage() {
   const [showPetReaction, setShowPetReaction] = useState(false)
   const [newPet, setNewPet] = useState<Pet | null>(null)
   const [isFirstPet, setIsFirstPet] = useState(false)
+  const [earnedPetReward, setEarnedPetReward] = useState(false)
   const [rewardPetType, setRewardPetType] = useState<PetType>('cat')
 
   const {
@@ -110,16 +111,25 @@ export default function PracticePage() {
         setShowSuccess(true)
         await endSession()
 
-        // If this is the child's first session (no pets yet), show pet reward modal
+        const percentage = words.length > 0 ? Math.round((wordsCorrect / words.length) * 100) : 0
+
         if (pets.length === 0 && selectedChild) {
+          // First pet - awarded regardless of score
           const petType = selectPetTypeFromFavorites(selectedChild.favorite_things || [])
           setRewardPetType(petType)
           setIsFirstPet(true)
+          setEarnedPetReward(true)
+        } else if (percentage >= PET_REWARD_SCORE_THRESHOLD && selectedChild) {
+          // High score reward - new pet!
+          const petType = selectPetTypeFromFavorites(selectedChild.favorite_things || [])
+          setRewardPetType(petType)
+          setIsFirstPet(false)
+          setEarnedPetReward(true)
         }
       }
     }
     handleSessionComplete()
-  }, [isSessionComplete, showSuccess, endSession, pets.length, selectedChild, selectPetTypeFromFavorites])
+  }, [isSessionComplete, showSuccess, endSession, pets.length, selectedChild, selectPetTypeFromFavorites, words.length, wordsCorrect])
 
   // Handle pet creation from the reward modal
   const handleCreatePet = useCallback(
@@ -308,8 +318,8 @@ export default function PracticePage() {
         totalWords={words.length}
         onComplete={() => {
           setShowSuccess(false)
-          if (isFirstPet) {
-            // New pet flow for first-time users
+          if (earnedPetReward) {
+            // New pet flow for first-time users or high score reward
             setShowPetReward(true)
           } else if (favoritePet) {
             // Show pet reaction for existing pet owners
