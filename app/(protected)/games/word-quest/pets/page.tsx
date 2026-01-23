@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useChild } from '../../ProtectedLayoutClient'
+import { useChild } from '../../../ProtectedLayoutClient'
 import { usePets } from '@/lib/hooks/usePets'
 import { PetCard } from '@/components/word-quest'
 import { Button, Card } from '@/components/ui'
@@ -14,7 +14,7 @@ export default function PetsPage() {
   })
 
   if (!selectedChild) {
-    router.push('/word-quest')
+    router.push('/games/word-quest')
     return null
   }
 
@@ -23,7 +23,7 @@ export default function PetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
-          onClick={() => router.push('/word-quest')}
+          onClick={() => router.push('/games/word-quest')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
           <svg
@@ -56,7 +56,7 @@ export default function PetsPage() {
       {error && (
         <Card className="text-center py-8">
           <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => router.push('/word-quest')}>Go Back</Button>
+          <Button onClick={() => router.push('/games/word-quest')}>Go Back</Button>
         </Card>
       )}
 
@@ -68,7 +68,7 @@ export default function PetsPage() {
           <p className="text-gray-600 mb-6">
             Practice reading words to earn your first pet friend!
           </p>
-          <Button onClick={() => router.push('/word-quest/practice')}>
+          <Button onClick={() => router.push('/games/word-quest/practice')}>
             Start Practice
           </Button>
         </Card>

@@ -1,0 +1,165 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useChild } from '../ProtectedLayoutClient'
+import { Button, Card } from '@/components/ui'
+
+interface GameCardProps {
+  title: string
+  description: string
+  icon: string
+  href: string
+  color: string
+  available: boolean
+}
+
+function GameCard({ title, description, icon, href, color, available }: GameCardProps) {
+  const router = useRouter()
+
+  return (
+    <Card
+      className={`
+        relative overflow-hidden cursor-pointer transition-all duration-200
+        ${available ? 'hover:shadow-lg hover:scale-[1.02]' : 'opacity-60'}
+      `}
+      onClick={() => available && router.push(href)}
+    >
+      <div className={`absolute top-0 left-0 right-0 h-2 ${color}`} />
+      <div className="pt-6 pb-4 px-4 text-center">
+        <div className="text-5xl mb-4">{icon}</div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+        <p className="text-gray-600 text-sm mb-4">{description}</p>
+        {available ? (
+          <Button
+            size="sm"
+            className={`${color.replace('bg-', 'bg-opacity-90 ')}`}
+          >
+            Play Now
+          </Button>
+        ) : (
+          <span className="inline-block px-4 py-2 bg-gray-100 text-gray-500 rounded-full text-sm font-medium">
+            Coming Soon
+          </span>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+export default function GamesPage() {
+  const router = useRouter()
+  const { selectedChild, children } = useChild()
+
+  if (!selectedChild) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+        {children.length === 0 ? (
+          <Card className="py-8">
+            <div className="text-6xl mb-4">🎮</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              Create a profile first
+            </h2>
+            <p className="text-gray-600 mb-6">
+              To start playing games, you need to create a child profile.
+            </p>
+            <Button onClick={() => router.push('/onboarding')}>
+              Create Profile
+            </Button>
+          </Card>
+        ) : (
+          <Card className="py-8">
+            <div className="text-6xl mb-4">🎮</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              Select a child
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please select a child from the menu to start playing games.
+            </p>
+          </Card>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="text-center mb-8">
+        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center shadow-lg">
+          <span className="text-4xl">🎮</span>
+        </div>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Games</h1>
+        <p className="text-gray-600">
+          Practice reading and earn rewards, {selectedChild.name}!
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <GameCard
+          title="Word Quest"
+          description="Practice reading sight words out loud and earn pet rewards!"
+          icon="🎤"
+          href="/games/word-quest"
+          color="bg-primary-500"
+          available={true}
+        />
+        <GameCard
+          title="Sentence Shenanigans"
+          description="Scan worksheets and practice reading full sentences for extra rewards!"
+          icon="📖"
+          href="/games/sentence-shenanigans"
+          color="bg-secondary-500"
+          available={true}
+        />
+      </div>
+
+      {/* How Games Work */}
+      <Card className="mb-8">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">How Games Work</h3>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="text-center p-4">
+            <div className="text-3xl mb-2">🎯</div>
+            <h4 className="font-semibold text-gray-800 mb-1">Practice</h4>
+            <p className="text-sm text-gray-600">
+              Read words or sentences out loud using your microphone
+            </p>
+          </div>
+          <div className="text-center p-4">
+            <div className="text-3xl mb-2">⭐</div>
+            <h4 className="font-semibold text-gray-800 mb-1">Score</h4>
+            <p className="text-sm text-gray-600">
+              Get accuracy scores and track your progress over time
+            </p>
+          </div>
+          <div className="text-center p-4">
+            <div className="text-3xl mb-2">🐾</div>
+            <h4 className="font-semibold text-gray-800 mb-1">Earn</h4>
+            <p className="text-sm text-gray-600">
+              Unlock and level up virtual pets as rewards for practicing!
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Browser compatibility notice */}
+      <div className="p-4 bg-blue-50 rounded-xl text-sm text-blue-800">
+        <div className="flex items-start gap-2">
+          <svg
+            className="w-5 h-5 flex-shrink-0 mt-0.5"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <div>
+            <strong>Tip:</strong> Games work best in Chrome or Edge browsers
+            with a microphone. Make sure to allow microphone access when asked!
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

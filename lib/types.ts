@@ -1108,3 +1108,116 @@ export interface ChildReadingStats {
   longest_streak_days: number;
   last_practice_date: string | null;
 }
+
+// ============================================
+// Sentence Shenanigans Types
+// ============================================
+
+// Reading materials uploaded by parents (scanned worksheets, book pages, etc.)
+export interface ReadingMaterial {
+  id: string;
+  child_id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  image_storage_path: string | null;
+  sentence_count: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  sentences?: MaterialSentence[];
+}
+
+// Individual sentences extracted from reading materials
+export interface MaterialSentence {
+  id: string;
+  material_id: string;
+  sentence_text: string;
+  display_order: number;
+  ocr_confidence: number | null;
+  is_edited: boolean;
+  times_practiced: number;
+  times_correct: number;
+  best_accuracy: number | null;
+  last_practiced_at: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+// Practice sessions for sentence reading
+export interface SentencePracticeSession {
+  id: string;
+  child_id: string;
+  material_id: string;
+  sentences_practiced: number;
+  sentences_correct: number;
+  total_words_attempted: number;
+  total_words_correct: number;
+  accuracy_percentage: number | null;
+  duration_seconds: number | null;
+  pet_reward_id: string | null;
+  points_earned: number;
+  session_date: string;
+  started_at: string;
+  completed_at: string | null;
+}
+
+// Individual sentence attempts within a session
+export interface SentenceAttempt {
+  id: string;
+  session_id: string;
+  sentence_id: string;
+  spoken_text: string;
+  word_count: number;
+  words_correct: number;
+  accuracy_percentage: number;
+  word_results: SentenceWordResult[];
+  attempt_number: number;
+  is_correct: boolean;
+  created_at: string;
+}
+
+// Word-level result for sentence scoring
+export interface SentenceWordResult {
+  word: string;
+  spoken: string | null;
+  correct: boolean;
+  position: number;
+}
+
+// OCR result from Tesseract.js
+export interface OCRResult {
+  text: string;
+  confidence: number;
+  sentences: ExtractedSentence[];
+}
+
+// Extracted sentence from OCR
+export interface ExtractedSentence {
+  text: string;
+  confidence: number;
+  order: number;
+}
+
+// Sentence practice attempt result (client-side)
+export interface SentenceAttemptResult {
+  sentence: string;
+  spoken: string;
+  accuracy: number;
+  wordResults: SentenceWordResult[];
+  correct: boolean;
+  timestamp: Date;
+}
+
+// Accuracy threshold for "correct" sentence (85%)
+export const SENTENCE_ACCURACY_THRESHOLD = 85;
+
+// XP rewards for Sentence Shenanigans sessions
+export const SENTENCE_XP_REWARDS = {
+  basePerSentence: 5,
+  accuracyBonus90: 10,
+  accuracyBonus95: 20,
+  accuracyBonus100: 35,
+  completionBonus: 15,
+} as const;

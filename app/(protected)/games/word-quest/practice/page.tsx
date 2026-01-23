@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useChild } from '../../ProtectedLayoutClient'
+import { useChild } from '../../../ProtectedLayoutClient'
 import { useWordQuest } from '@/lib/hooks/useWordQuest'
 import { useSpeechRecognition } from '@/lib/hooks/useSpeechRecognition'
 import { usePets } from '@/lib/hooks/usePets'
@@ -165,11 +165,11 @@ export default function PracticePage() {
 
   const handleEndSession = async () => {
     await endSession()
-    router.push('/word-quest')
+    router.push('/games/word-quest')
   }
 
   if (!selectedChild) {
-    router.push('/word-quest')
+    router.push('/games/word-quest')
     return null
   }
 
@@ -185,7 +185,7 @@ export default function PracticePage() {
             Your browser doesn&apos;t support speech recognition. Please try
             using Chrome or Edge.
           </p>
-          <Button onClick={() => router.push('/word-quest')}>Go Back</Button>
+          <Button onClick={() => router.push('/games/word-quest')}>Go Back</Button>
         </Card>
       </div>
     )
@@ -211,7 +211,7 @@ export default function PracticePage() {
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="flex gap-4 justify-center">
             <Button onClick={() => startSession()}>Try Again</Button>
-            <Button variant="outline" onClick={() => router.push('/word-quest')}>
+            <Button variant="outline" onClick={() => router.push('/games/word-quest')}>
               Go Back
             </Button>
           </div>
@@ -325,7 +325,7 @@ export default function PracticePage() {
             // Show pet reaction for existing pet owners
             setShowPetReaction(true)
           } else {
-            router.push('/word-quest')
+            router.push('/games/word-quest')
           }
         }}
       />
@@ -342,7 +342,7 @@ export default function PracticePage() {
           show={showPetReaction}
           onComplete={() => {
             setShowPetReaction(false)
-            router.push('/word-quest')
+            router.push('/games/word-quest')
           }}
         />
       )}
@@ -353,7 +353,7 @@ export default function PracticePage() {
         pet={newPet}
         petType={rewardPetType}
         isFirstPet={isFirstPet}
-        onClose={() => router.push('/word-quest')}
+        onClose={() => router.push('/games/word-quest')}
         onVisitPet={() => {
           if (newPet) {
             router.push(`/word-quest/pets/${newPet.id}`)

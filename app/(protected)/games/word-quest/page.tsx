@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useChild } from '../ProtectedLayoutClient'
+import { useChild } from '../../ProtectedLayoutClient'
 import { Button, Card } from '@/components/ui'
 import { PetCard } from '@/components/word-quest'
 import { usePets } from '@/lib/hooks/usePets'
@@ -116,7 +116,7 @@ export default function WordQuestPage() {
           <p className="text-gray-500 text-sm mb-6">10 words per session</p>
           <Button
             size="lg"
-            onClick={() => router.push('/word-quest/practice')}
+            onClick={() => router.push('/games/word-quest/practice')}
             className="bg-gradient-to-r from-primary-500 to-secondary-500 px-8"
           >
             <span className="flex items-center gap-2">
@@ -184,7 +184,7 @@ export default function WordQuestPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-800">My Pets</h3>
             <button
-              onClick={() => router.push('/word-quest/pets')}
+              onClick={() => router.push('/games/word-quest/pets')}
               className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
             >
               View All ({pets.length})
