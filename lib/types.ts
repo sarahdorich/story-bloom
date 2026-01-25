@@ -1210,8 +1210,8 @@ export interface SentenceAttemptResult {
   timestamp: Date;
 }
 
-// Accuracy threshold for "correct" sentence (85%)
-export const SENTENCE_ACCURACY_THRESHOLD = 85;
+// Accuracy threshold for "correct" sentence (50%)
+export const SENTENCE_ACCURACY_THRESHOLD = 50;
 
 // XP rewards for Sentence Shenanigans sessions
 export const SENTENCE_XP_REWARDS = {
