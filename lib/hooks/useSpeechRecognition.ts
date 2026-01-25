@@ -79,6 +79,9 @@ export function useSpeechRecognition(
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
   const optionsRef = useRef(options)
   optionsRef.current = options
+  const abortRetryCountRef = useRef(0)
+  const maxAbortRetries = 3
+  const isListeningIntentRef = useRef(false)
 
   useEffect(() => {
     // Access the Web Speech API from window
@@ -94,6 +97,12 @@ export function useSpeechRecognition(
 
     setIsSupported(!!SpeechRecognitionAPI)
 
+    // Detect iOS/iPadOS for retry behavior
+    const isIOS =
+      typeof navigator !== 'undefined' &&
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+
     if (SpeechRecognitionAPI) {
       const recognition = new SpeechRecognitionAPI()
       recognition.continuous = false
@@ -103,6 +112,7 @@ export function useSpeechRecognition(
       recognition.onstart = () => {
         setStatus('listening')
         setError(null)
+        abortRetryCountRef.current = 0
       }
 
       recognition.onresult = (event: ISpeechRecognitionEvent) => {
@@ -110,13 +120,36 @@ export function useSpeechRecognition(
         const text = result[0].transcript.trim().toLowerCase()
         setTranscript(text)
         setStatus('processing')
+        isListeningIntentRef.current = false
         optionsRef.current.onResult?.(text)
       }
 
       recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
+        // On iOS/iPadOS, auto-retry on 'aborted' errors (common issue with Safari)
+        if (isIOS && event.error === 'aborted' && isListeningIntentRef.current) {
+          if (abortRetryCountRef.current < maxAbortRetries) {
+            abortRetryCountRef.current++
+            // Small delay before retrying to let the system settle
+            setTimeout(() => {
+              if (isListeningIntentRef.current && recognitionRef.current) {
+                try {
+                  recognitionRef.current.start()
+                } catch {
+                  // If retry fails, show error
+                  setError(getErrorMessage(event.error))
+                  setStatus('error')
+                  isListeningIntentRef.current = false
+                }
+              }
+            }, 100)
+            return
+          }
+        }
+
         const errorMessage = getErrorMessage(event.error)
         setError(errorMessage)
         setStatus('error')
+        isListeningIntentRef.current = false
         optionsRef.current.onError?.(errorMessage)
       }
 
@@ -133,6 +166,7 @@ export function useSpeechRecognition(
     }
 
     return () => {
+      isListeningIntentRef.current = false
       recognitionRef.current?.abort()
     }
   }, [])
@@ -141,6 +175,8 @@ export function useSpeechRecognition(
     if (recognitionRef.current && status !== 'listening') {
       setError(null)
       setTranscript('')
+      isListeningIntentRef.current = true
+      abortRetryCountRef.current = 0
       try {
         recognitionRef.current.start()
       } catch {
@@ -151,6 +187,7 @@ export function useSpeechRecognition(
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
+      isListeningIntentRef.current = false
       recognitionRef.current.stop()
       setStatus('idle')
     }
@@ -160,6 +197,7 @@ export function useSpeechRecognition(
     setTranscript('')
     setStatus('idle')
     setError(null)
+    isListeningIntentRef.current = false
   }, [])
 
   return {
