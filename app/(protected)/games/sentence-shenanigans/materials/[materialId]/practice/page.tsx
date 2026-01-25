@@ -133,8 +133,11 @@ export default function PracticeSessionPage({ params }: PageProps) {
             setIsFirstPet(true)
             setEarnedPetReward(true)
           } else if (accuracy >= SENTENCE_ACCURACY_THRESHOLD && selectedChild) {
-            // Existing pet owner with high score - show pet reaction
-            // Pet XP is already awarded via API
+            // High score reward - new pet!
+            const petType = selectPetTypeFromFavorites(selectedChild.favorite_things || [])
+            setRewardPetType(petType)
+            setIsFirstPet(false)
+            setEarnedPetReward(true)
           }
         }
       }
