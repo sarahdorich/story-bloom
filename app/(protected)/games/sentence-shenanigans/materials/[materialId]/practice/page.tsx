@@ -16,7 +16,7 @@ import {
 } from '@/components/word-quest'
 import { SentenceCard } from '../../../components/SentenceCard'
 import type { Pet, PetType, PetCustomization, SentenceWordResult } from '@/lib/types'
-import { PET_MAPPINGS, SENTENCE_ACCURACY_THRESHOLD } from '@/lib/types'
+import { PET_MAPPINGS } from '@/lib/types'
 
 interface PageProps {
   params: Promise<{ materialId: string }>
@@ -124,19 +124,13 @@ export default function PracticeSessionPage({ params }: PageProps) {
 
         if (sessionResult) {
           // The API returns { session, stats, petReward }
-          const accuracy = (sessionResult as { stats?: { overallAccuracy: number } }).stats?.overallAccuracy || 0
+          const petReward = (sessionResult as { petReward?: { isNewPet: boolean; isFirstPet: boolean; xpGained: number } }).petReward
 
-          if (pets.length === 0 && selectedChild && accuracy >= SENTENCE_ACCURACY_THRESHOLD) {
-            // First pet - awarded for high score
+          // Show pet customization if the API indicates we earned a new pet
+          if (petReward?.isNewPet && selectedChild) {
             const petType = selectPetTypeFromFavorites(selectedChild.favorite_things || [])
             setRewardPetType(petType)
-            setIsFirstPet(true)
-            setEarnedPetReward(true)
-          } else if (accuracy >= SENTENCE_ACCURACY_THRESHOLD && selectedChild) {
-            // High score reward - new pet!
-            const petType = selectPetTypeFromFavorites(selectedChild.favorite_things || [])
-            setRewardPetType(petType)
-            setIsFirstPet(false)
+            setIsFirstPet(petReward.isFirstPet)
             setEarnedPetReward(true)
           }
         }
@@ -147,7 +141,6 @@ export default function PracticeSessionPage({ params }: PageProps) {
     isSessionComplete,
     showSuccess,
     endSession,
-    pets.length,
     selectedChild,
     selectPetTypeFromFavorites,
   ])
