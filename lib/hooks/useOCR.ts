@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
-import Tesseract from 'tesseract.js'
+import { useState, useCallback } from 'react'
 import type { ExtractedSentence, OCRResult } from '@/lib/types'
 
 interface UseOCRReturn {
@@ -9,7 +8,7 @@ interface UseOCRReturn {
   progress: number
   progressStatus: string
   error: string | null
-  extractText: (imageFile: File | Blob | string) => Promise<OCRResult | null>
+  extractText: (imageFile: File | Blob) => Promise<OCRResult | null>
   parseSentences: (text: string) => ExtractedSentence[]
   reset: () => void
 }
@@ -146,7 +145,6 @@ export function useOCR(): UseOCRReturn {
   const [progress, setProgress] = useState(0)
   const [progressStatus, setProgressStatus] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const workerRef = useRef<Tesseract.Worker | null>(null)
 
   const reset = useCallback(() => {
     setIsProcessing(false)
@@ -160,56 +158,54 @@ export function useOCR(): UseOCRReturn {
   }, [])
 
   const extractText = useCallback(
-    async (imageFile: File | Blob | string): Promise<OCRResult | null> => {
+    async (imageFile: File | Blob): Promise<OCRResult | null> => {
       setIsProcessing(true)
       setProgress(0)
-      setProgressStatus('Initializing...')
+      setProgressStatus('Uploading image...')
       setError(null)
 
-      const startTime = Date.now()
-
       try {
-        // Create a new worker for each extraction
-        const worker = await Tesseract.createWorker('eng', 1, {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              setProgress(Math.round(m.progress * 100))
-              setProgressStatus('Reading text...')
-            } else if (m.status === 'loading tesseract core') {
-              setProgressStatus('Loading OCR engine...')
-            } else if (m.status === 'initializing tesseract') {
-              setProgressStatus('Preparing...')
-            } else if (m.status === 'loading language traineddata') {
-              setProgressStatus('Loading language data...')
-            } else if (m.status === 'initializing api') {
-              setProgressStatus('Starting OCR...')
-            }
-          },
+        // Send image to OCR API
+        const formData = new FormData()
+        formData.append('image', imageFile)
+
+        setProgress(20)
+        setProgressStatus('Processing image...')
+
+        const response = await fetch('/api/ocr', {
+          method: 'POST',
+          body: formData,
         })
 
-        workerRef.current = worker
+        setProgress(80)
+        setProgressStatus('Extracting text...')
 
-        // Run OCR
-        const { data } = await worker.recognize(imageFile)
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to process image')
+        }
 
-        // Terminate worker
-        await worker.terminate()
-        workerRef.current = null
+        const { text, confidence } = await response.json()
+
+        // Parse confidence - handle both string and number formats
+        const confidenceValue =
+          typeof confidence === 'string' ? parseFloat(confidence) : confidence
+        // Normalize to 0-1 range if needed
+        const normalizedConfidence =
+          confidenceValue > 1 ? confidenceValue / 100 : confidenceValue
 
         // Parse sentences from the recognized text
-        const sentences = splitIntoSentences(data.text)
+        const sentences = splitIntoSentences(text)
 
-        // Adjust confidence based on Tesseract confidence
+        // Adjust confidence based on API confidence
         const adjustedSentences = sentences.map((s) => ({
           ...s,
-          confidence: (data.confidence / 100) * s.confidence,
+          confidence: normalizedConfidence * s.confidence,
         }))
 
-        const processingTime = Date.now() - startTime
-
         const result: OCRResult = {
-          text: data.text,
-          confidence: data.confidence / 100,
+          text,
+          confidence: normalizedConfidence,
           sentences: adjustedSentences,
         }
 
@@ -227,15 +223,6 @@ export function useOCR(): UseOCRReturn {
         return null
       } finally {
         setIsProcessing(false)
-        // Clean up worker if it exists
-        if (workerRef.current) {
-          try {
-            await workerRef.current.terminate()
-          } catch {
-            // Ignore termination errors
-          }
-          workerRef.current = null
-        }
       }
     },
     []
