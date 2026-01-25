@@ -120,6 +120,16 @@ When adding a new pet type, update the following files:
    - `PET_NAMES` - Array of suggested names
    - `PERSONALITIES` - Array of personality descriptions
 
+4. **UI Components** - Add to `PET_EMOJIS` and/or `PET_TYPE_LABELS` in:
+   - `components/word-quest/PetCard.tsx`
+   - `components/word-quest/PetDisplay.tsx`
+   - `components/word-quest/PetHabitat.tsx` (also check `FLOATING_PETS` / `BOUNCING_PETS`)
+   - `components/word-quest/PetRewardModal.tsx`
+   - `components/word-quest/PetCustomizationForm.tsx`
+
+5. **`lib/hooks/useSpeechSynthesis.ts`** - Add to `PET_VOICE_SETTINGS`:
+   - Configure pitch, rate, volume for the pet's voice
+
 ### Pet Customization
 
 When earning a new pet, children can customize:

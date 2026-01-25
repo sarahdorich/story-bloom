@@ -30,6 +30,7 @@ const PET_TYPE_LABELS: Record<PetType, string> = {
   bird: 'Bird',
   fish: 'Fish',
   butterfly: 'Butterfly',
+  axolotl: 'Axolotl',
 };
 
 export function PetCustomizationForm({
