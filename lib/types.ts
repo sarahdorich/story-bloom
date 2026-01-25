@@ -293,6 +293,7 @@ export const PET_DEFAULT_HABITATS: Record<PetType, HabitatType> = {
   bird: 'sky',
   fish: 'ocean',
   butterfly: 'meadow',
+  axolotl: 'ocean',
 };
 
 export const PET_TYPES = [
@@ -306,6 +307,7 @@ export const PET_TYPES = [
   'bird',
   'fish',
   'butterfly',
+  'axolotl',
 ] as const;
 
 export type PetType = (typeof PET_TYPES)[number];
@@ -490,6 +492,18 @@ export const BEHAVIORS_BY_LEVEL: Record<PetType, string[][]> = {
     ['metamorphosis'],
     ['fairy_magic'],
   ],
+  axolotl: [
+    ['wiggle', 'swim'],
+    ['blow_bubbles', 'smile'],
+    ['wave_gills', 'float'],
+    ['hide_in_plants'],
+    ['play_with_pebbles', 'dance_swim'],
+    ['glow_softly'],
+    ['water_acrobatics'],
+    ['bubble_trail'],
+    ['regeneration_sparkle'],
+    ['aquatic_magic'],
+  ],
 };
 
 // Map child's favorite things to pet types
@@ -534,6 +548,9 @@ export const PET_MAPPINGS: Record<string, PetType> = {
   butterflies: 'butterfly',
   bug: 'butterfly',
   bugs: 'butterfly',
+  axolotl: 'axolotl',
+  axolotls: 'axolotl',
+  salamander: 'axolotl',
 };
 
 // Pet unlock thresholds (cumulative points needed)
