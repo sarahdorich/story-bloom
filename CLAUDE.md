@@ -39,3 +39,7 @@ Never push migrations to production! So don't use the `--linked` flag! For examp
 supabase db push --linked
 ```
 
+## StoryBloom Games
+
+See games_readme.md for more information!
+

@@ -105,55 +105,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const childId = (session.children as { id: string }).id
 
     if (overallAccuracy >= SENTENCE_ACCURACY_THRESHOLD) {
-      // Check if child has any pets
+      // Child earned a new pet! They get to customize one every time they hit the threshold
       const { data: existingPets } = await supabase
         .from('pets')
-        .select('id, is_favorite')
+        .select('id')
         .eq('child_id', childId)
 
-      if (existingPets && existingPets.length > 0) {
-        // Award XP to favorite pet (or first pet if no favorite)
-        const favoritePet =
-          existingPets.find((p) => p.is_favorite) || existingPets[0]
+      const isFirstPet = !existingPets || existingPets.length === 0
 
-        if (favoritePet) {
-          // Get current XP
-          const { data: pet } = await supabase
-            .from('pets')
-            .select('experience_points, level')
-            .eq('id', favoritePet.id)
-            .single()
-
-          if (pet) {
-            const newXP = pet.experience_points + pointsEarned
-
-            await supabase
-              .from('pets')
-              .update({
-                experience_points: newXP,
-                last_reading_session_at: new Date().toISOString(),
-              })
-              .eq('id', favoritePet.id)
-
-            // Update session with pet reward reference
-            await supabase
-              .from('sentence_practice_sessions')
-              .update({ pet_reward_id: favoritePet.id })
-              .eq('id', sessionId)
-
-            petReward = {
-              petId: favoritePet.id,
-              xpGained: pointsEarned,
-              isNewPet: false,
-            }
-          }
-        }
-      } else {
-        // No pets yet - they can earn their first pet
-        petReward = {
-          isNewPet: true,
-          xpGained: pointsEarned,
-        }
+      petReward = {
+        isNewPet: true,
+        isFirstPet,
+        xpGained: pointsEarned,
       }
     }
 
