@@ -212,6 +212,7 @@ const PET_NAMES: Record<PetType, string[]> = {
   bird: ['Tweety', 'Sky', 'Sunny', 'Chirpy', 'Feathers', 'Rio', 'Blue', 'Pip'],
   fish: ['Bubbles', 'Goldie', 'Splash', 'Finn', 'Coral', 'Shimmer', 'Wave', 'Neptune'],
   butterfly: ['Flutter', 'Blossom', 'Petal', 'Sunny', 'Wings', 'Monarch', 'Pixie', 'Rainbow'],
+  axolotl: ['Axel', 'Gilly', 'Bubbles', 'Lotl', 'Coral', 'Pinky', 'Squishy', 'Wobbles'],
 }
 
 function generatePetName(petType: PetType): string {
@@ -230,6 +231,7 @@ const PERSONALITIES: Record<PetType, string[]> = {
   bird: ['cheerful and melodic', 'curious and bright', 'friendly and musical', 'colorful and happy'],
   fish: ['graceful and calm', 'shimmery and magical', 'playful and splashy', 'peaceful and pretty'],
   butterfly: ['delicate and beautiful', 'colorful and free', 'gentle and magical', 'graceful and sweet'],
+  axolotl: ['smiley and silly', 'wiggly and playful', 'curious and friendly', 'bubbly and sweet'],
 }
 
 function generatePersonality(petType: PetType): string {

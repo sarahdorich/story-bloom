@@ -98,7 +98,27 @@ Pets are the primary reward mechanism for both games.
 ### Pet Types
 
 Pet type is selected based on the child's favorite things:
-- cat, dog, dinosaur, unicorn, dragon, bunny, bear, bird, fish, butterfly
+- cat, dog, dinosaur, unicorn, dragon, bunny, bear, bird, fish, butterfly, axolotl
+
+### Adding a New Pet Type
+
+When adding a new pet type, update the following files:
+
+1. **`lib/types.ts`** - Add to these records:
+   - `PET_TYPES` array
+   - `PET_DEFAULT_HABITATS` (assign a default habitat)
+   - `BEHAVIORS_BY_LEVEL` (10 levels of behaviors)
+   - `PET_MAPPINGS` (keywords that map to this pet type)
+
+2. **`lib/pet-customization-options.ts`** - Add to `PET_TYPE_OPTIONS`:
+   - `allowedColors` - Available color options
+   - `allowedPatterns` - Available pattern options
+   - `suggestedAccessories` - Recommended accessories for this pet
+   - `defaultPromptStyle` - DALL-E prompt description for image generation
+
+3. **`app/api/word-quest/pets/route.ts`** - Add to these records:
+   - `PET_NAMES` - Array of suggested names
+   - `PERSONALITIES` - Array of personality descriptions
 
 ### Pet Customization
 
