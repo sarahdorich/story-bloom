@@ -22,10 +22,11 @@ const PET_EMOJIS: Record<PetType, string> = {
   bird: '🐦',
   fish: '🐠',
   butterfly: '🦋',
+  axolotl: '🦎',
 };
 
 // Pets that should use floating animation
-const FLOATING_PETS: PetType[] = ['fish', 'butterfly', 'bird'];
+const FLOATING_PETS: PetType[] = ['fish', 'butterfly', 'bird', 'axolotl'];
 
 // Pets that should use bouncing animation
 const BOUNCING_PETS: PetType[] = ['bunny', 'dog'];

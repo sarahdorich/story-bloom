@@ -35,6 +35,7 @@ const PET_EMOJIS: Record<PetType, string> = {
   bird: '🐦',
   fish: '🐠',
   butterfly: '🦋',
+  axolotl: '🦎',
 };
 
 const PET_TYPE_LABELS: Record<PetType, string> = {
@@ -48,6 +49,7 @@ const PET_TYPE_LABELS: Record<PetType, string> = {
   bird: 'Bird',
   fish: 'Fish',
   butterfly: 'Butterfly',
+  axolotl: 'Axolotl',
 };
 
 const GENERATING_MESSAGES = [

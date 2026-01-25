@@ -72,6 +72,12 @@ export const PET_TYPE_OPTIONS: Record<PetType, PetTypeOptions> = {
     suggestedAccessories: ['crown', 'flower', 'star'],
     defaultPromptStyle: 'beautiful butterfly with delicate patterned wings',
   },
+  axolotl: {
+    allowedColors: ['pink', 'white', 'golden', 'purple', 'blue', 'green'],
+    allowedPatterns: ['solid', 'spotted', 'gradient', 'sparkly'],
+    suggestedAccessories: ['crown', 'bow', 'flower'],
+    defaultPromptStyle: 'adorable smiling axolotl with fluffy external gills and a friendly face',
+  },
 };
 
 /**

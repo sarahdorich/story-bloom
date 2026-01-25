@@ -19,6 +19,7 @@ const PET_EMOJIS: Record<PetType, string> = {
   bird: '🐦',
   fish: '🐠',
   butterfly: '🦋',
+  axolotl: '🦎',
 }
 
 export function PetCard({ pet, onClick, showStats = true }: PetCardProps) {

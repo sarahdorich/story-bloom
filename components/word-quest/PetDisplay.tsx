@@ -22,6 +22,7 @@ const PET_EMOJIS: Record<PetType, string> = {
   bird: '🐦',
   fish: '🐠',
   butterfly: '🦋',
+  axolotl: '🦎',
 }
 
 const INTERACTION_ICONS: Record<InteractionType, { icon: string; label: string }> = {

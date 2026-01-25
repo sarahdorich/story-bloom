@@ -24,6 +24,7 @@ const PET_VOICE_SETTINGS: Record<PetType, VoiceSettings> = {
   dinosaur: { pitch: 1.1, rate: 1.1, volume: 1, preferMale: true }, // energetic & fun, not slow
   unicorn: { pitch: 1.5, rate: 0.95, volume: 1 },
   butterfly: { pitch: 1.6, rate: 1.0, volume: 1 },
+  axolotl: { pitch: 1.4, rate: 0.9, volume: 1 }, // bubbly and friendly
 }
 
 interface UseSpeechSynthesisOptions {
