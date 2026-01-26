@@ -45,6 +45,7 @@ interface UseSentenceShenanigansReturn {
   // Actions
   startSession: (materialId: string) => Promise<void>
   checkSentence: (spokenText: string) => Promise<SentenceAttemptResult | null>
+  advanceToNextSentence: () => void
   skipSentence: () => void
   endSession: () => Promise<SentencePracticeSession | null>
 }
@@ -327,13 +328,18 @@ export function useSentenceShenanigans(
         }),
       }).catch(console.error)
 
-      // Advance to next sentence after recording
-      setCurrentSentenceIndex((prev) => prev + 1)
+      // Note: Do NOT advance sentence here - let the caller control when to advance
+      // so they can show feedback for the current sentence first
 
       return attempt
     },
     [currentSentence, sessionId]
   )
+
+  // Advance to the next sentence (called by UI after showing feedback)
+  const advanceToNextSentence = useCallback(() => {
+    setCurrentSentenceIndex((prev) => prev + 1)
+  }, [])
 
   // Skip the current sentence
   const skipSentence = useCallback(() => {
@@ -405,6 +411,7 @@ export function useSentenceShenanigans(
     // Actions
     startSession,
     checkSentence,
+    advanceToNextSentence,
     skipSentence,
     endSession,
   }
