@@ -50,6 +50,7 @@ export default function PracticeSessionPage({ params }: PageProps) {
     isSessionComplete,
     startSession,
     checkSentence,
+    advanceToNextSentence,
     skipSentence,
     endSession,
   } = useSentenceShenanigans({ childId: selectedChild?.id || '' })
@@ -83,18 +84,22 @@ export default function PracticeSessionPage({ params }: PageProps) {
         setLastAccuracy(result.accuracy)
         setIsAdvancing(true)
 
-        // Advance to next sentence after showing result
-        const delay = result.correct ? 2000 : 2500
-        setTimeout(() => {
-          setLastResult(null)
-          setLastWordResults([])
-          setLastAccuracy(0)
-          setIsAdvancing(false)
-        }, delay)
+        // Only auto-advance on 100% accuracy - otherwise wait for "Got it" tap
+        if (result.accuracy === 100) {
+          setTimeout(() => {
+            advanceToNextSentence()
+            setLastResult(null)
+            setLastWordResults([])
+            setLastAccuracy(0)
+            setIsAdvancing(false)
+          }, 2000)
+        }
+        // For < 100% accuracy, user must tap "Got it" to continue
       }
     },
-    [currentSentence, checkSentence, isAdvancing]
+    [currentSentence, checkSentence, advanceToNextSentence, isAdvancing]
   )
+
 
   const {
     isSupported,
@@ -170,6 +175,16 @@ export default function PracticeSessionPage({ params }: PageProps) {
     setLastResult(null)
     setLastWordResults([])
     setLastAccuracy(0)
+  }
+
+  // Handle "Got it" button for non-perfect attempts
+  const handleGotIt = () => {
+    advanceToNextSentence()
+    resetTranscript()
+    setLastResult(null)
+    setLastWordResults([])
+    setLastAccuracy(0)
+    setIsAdvancing(false)
   }
 
   const handleEndSession = async () => {
@@ -291,20 +306,31 @@ export default function PracticeSessionPage({ params }: PageProps) {
 
       {/* Controls */}
       <div className="flex flex-col items-center gap-6">
-        <SpeechButton
-          status={status}
-          onStart={startListening}
-          onStop={stopListening}
-          disabled={!currentSentence || lastResult !== null || isAdvancing}
-        />
+        {/* Show "Got it" button when showing feedback for non-perfect attempts */}
+        {lastResult !== null && lastAccuracy < 100 ? (
+          <Button
+            size="lg"
+            onClick={handleGotIt}
+            className="px-8 py-4 text-lg"
+          >
+            Got it!
+          </Button>
+        ) : (
+          <SpeechButton
+            status={status}
+            onStart={startListening}
+            onStop={stopListening}
+            disabled={!currentSentence || lastResult !== null || isAdvancing}
+          />
+        )}
 
         <p className="text-gray-500 text-sm text-center">
           {status === 'listening'
             ? 'Listening... Read the sentence!'
-            : lastResult === 'correct'
-              ? 'Excellent! Moving to next sentence...'
-              : lastResult === 'incorrect'
-                ? 'Keep practicing! Moving on...'
+            : lastResult === 'correct' && lastAccuracy === 100
+              ? 'Perfect! Moving to next sentence...'
+              : lastResult !== null && lastAccuracy < 100
+                ? 'Look at the words in red and tap "Got it" when ready'
                 : 'Tap the microphone and read the sentence aloud'}
         </p>
 
