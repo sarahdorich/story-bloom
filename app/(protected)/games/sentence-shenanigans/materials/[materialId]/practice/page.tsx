@@ -53,6 +53,8 @@ export default function PracticeSessionPage({ params }: PageProps) {
     advanceToNextSentence,
     skipSentence,
     endSession,
+    totalWordsCorrect,
+    totalWordsAttempted,
   } = useSentenceShenanigans({ childId: selectedChild?.id || '' })
 
   const { pets, favoritePet, createPetWithCustomization, pollImageStatus } = usePets({
@@ -351,8 +353,8 @@ export default function PracticeSessionPage({ params }: PageProps) {
       {/* Success Animation */}
       <SuccessAnimation
         show={showSuccess && !showPetReward && !showPetReaction}
-        wordsCorrect={sentencesCorrect}
-        totalWords={sentences.length}
+        wordsCorrect={totalWordsCorrect}
+        totalWords={totalWordsAttempted}
         onComplete={() => {
           setShowSuccess(false)
           if (earnedPetReward) {

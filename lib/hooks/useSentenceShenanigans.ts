@@ -41,6 +41,9 @@ interface UseSentenceShenanigansReturn {
   isSessionComplete: boolean
   attempts: SentenceAttemptResult[]
   currentMaterial: ReadingMaterial | null
+  // Word-level stats
+  totalWordsCorrect: number
+  totalWordsAttempted: number
 
   // Actions
   startSession: (materialId: string) => Promise<void>
@@ -152,6 +155,9 @@ export function useSentenceShenanigans(
   const [sentencesCorrect, setSentencesCorrect] = useState(0)
   const [attempts, setAttempts] = useState<SentenceAttemptResult[]>([])
   const [currentMaterial, setCurrentMaterial] = useState<ReadingMaterial | null>(null)
+  // Word-level stats
+  const [totalWordsCorrect, setTotalWordsCorrect] = useState(0)
+  const [totalWordsAttempted, setTotalWordsAttempted] = useState(0)
 
   const sessionStartTime = useRef<Date | null>(null)
 
@@ -278,6 +284,8 @@ export function useSentenceShenanigans(
         setSentencesCorrect(0)
         setAttempts([])
         setCurrentMaterial(material)
+        setTotalWordsCorrect(0)
+        setTotalWordsAttempted(0)
         sessionStartTime.current = new Date()
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to start session')
@@ -314,6 +322,11 @@ export function useSentenceShenanigans(
       if (isCorrect) {
         setSentencesCorrect((prev) => prev + 1)
       }
+
+      // Track word-level stats
+      const wordsCorrectInAttempt = wordResults.filter((w) => w.correct).length
+      setTotalWordsCorrect((prev) => prev + wordsCorrectInAttempt)
+      setTotalWordsAttempted((prev) => prev + wordResults.length)
 
       // Record attempt via API (fire and forget)
       fetch(`/api/sentence-shenanigans/sessions/${sessionId}/attempts`, {
@@ -407,6 +420,9 @@ export function useSentenceShenanigans(
     isSessionComplete,
     attempts,
     currentMaterial,
+    // Word-level stats
+    totalWordsCorrect,
+    totalWordsAttempted,
 
     // Actions
     startSession,
