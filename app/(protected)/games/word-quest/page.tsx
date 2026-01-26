@@ -197,7 +197,7 @@ export default function WordQuestPage() {
             <div className="max-w-[200px] mx-auto">
               <PetCard
                 pet={favoritePet}
-                onClick={() => router.push(`/word-quest/pets/${favoritePet.id}`)}
+                onClick={() => router.push(`/games/word-quest/pets/${favoritePet.id}`)}
               />
             </div>
           )}

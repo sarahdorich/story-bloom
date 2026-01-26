@@ -86,7 +86,7 @@ export default function PetsPage() {
               <PetCard
                 key={pet.id}
                 pet={pet}
-                onClick={() => router.push(`/word-quest/pets/${pet.id}`)}
+                onClick={() => router.push(`/games/word-quest/pets/${pet.id}`)}
               />
             ))}
 

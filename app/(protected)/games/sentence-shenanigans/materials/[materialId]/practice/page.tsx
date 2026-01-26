@@ -164,6 +164,11 @@ export default function PracticeSessionPage({ params }: PageProps) {
     [createPetWithCustomization, rewardPetType]
   )
 
+  // Handle pet type change from reward modal
+  const handlePetTypeChange = useCallback((newPetType: PetType) => {
+    setRewardPetType(newPetType)
+  }, [])
+
   // Reset transcript when advancing
   useEffect(() => {
     if (lastResult === null) {
@@ -398,6 +403,7 @@ export default function PracticeSessionPage({ params }: PageProps) {
         }}
         onCreatePet={handleCreatePet}
         pollImageStatus={pollImageStatus}
+        onPetTypeChange={handlePetTypeChange}
       />
     </div>
   )
