@@ -53,6 +53,8 @@ export default function PracticeSessionPage({ params }: PageProps) {
     advanceToNextSentence,
     skipSentence,
     endSession,
+    totalWordsCorrect,
+    totalWordsAttempted,
   } = useSentenceShenanigans({ childId: selectedChild?.id || '' })
 
   const { pets, favoritePet, createPetWithCustomization, pollImageStatus } = usePets({
@@ -161,6 +163,11 @@ export default function PracticeSessionPage({ params }: PageProps) {
     },
     [createPetWithCustomization, rewardPetType]
   )
+
+  // Handle pet type change from reward modal
+  const handlePetTypeChange = useCallback((newPetType: PetType) => {
+    setRewardPetType(newPetType)
+  }, [])
 
   // Reset transcript when advancing
   useEffect(() => {
@@ -351,8 +358,8 @@ export default function PracticeSessionPage({ params }: PageProps) {
       {/* Success Animation */}
       <SuccessAnimation
         show={showSuccess && !showPetReward && !showPetReaction}
-        wordsCorrect={sentencesCorrect}
-        totalWords={sentences.length}
+        wordsCorrect={totalWordsCorrect}
+        totalWords={totalWordsAttempted}
         onComplete={() => {
           setShowSuccess(false)
           if (earnedPetReward) {
@@ -396,6 +403,7 @@ export default function PracticeSessionPage({ params }: PageProps) {
         }}
         onCreatePet={handleCreatePet}
         pollImageStatus={pollImageStatus}
+        onPetTypeChange={handlePetTypeChange}
       />
     </div>
   )

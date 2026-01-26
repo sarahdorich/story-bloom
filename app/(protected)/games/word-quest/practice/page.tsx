@@ -143,6 +143,11 @@ export default function PracticePage() {
     [createPetWithCustomization, rewardPetType]
   )
 
+  // Handle pet type change from reward modal
+  const handlePetTypeChange = useCallback((newPetType: PetType) => {
+    setRewardPetType(newPetType)
+  }, [])
+
   // Reset transcript when advancing
   useEffect(() => {
     if (lastResult === null) {
@@ -356,11 +361,12 @@ export default function PracticePage() {
         onClose={() => router.push('/games/word-quest')}
         onVisitPet={() => {
           if (newPet) {
-            router.push(`/word-quest/pets/${newPet.id}`)
+            router.push(`/games/word-quest/pets/${newPet.id}`)
           }
         }}
         onCreatePet={handleCreatePet}
         pollImageStatus={pollImageStatus}
+        onPetTypeChange={handlePetTypeChange}
       />
     </div>
   )

@@ -5,7 +5,7 @@ import type { Pet, PetType, PetCustomization } from '@/lib/types';
 import { Button } from '@/components/ui';
 import { PetCustomizationForm } from './PetCustomizationForm';
 
-type ModalStep = 'reveal' | 'customize' | 'generating' | 'complete';
+type ModalStep = 'reveal' | 'select-type' | 'customize' | 'generating' | 'complete';
 
 interface PetRewardModalProps {
   show: boolean;
@@ -22,6 +22,7 @@ interface PetRewardModalProps {
     petId: string,
     onComplete?: (imageUrl: string) => void
   ) => () => void;
+  onPetTypeChange?: (petType: PetType) => void;
 }
 
 const PET_EMOJIS: Record<PetType, string> = {
@@ -52,6 +53,20 @@ const PET_TYPE_LABELS: Record<PetType, string> = {
   axolotl: 'Axolotl',
 };
 
+const ALL_PET_TYPES: PetType[] = [
+  'cat',
+  'dog',
+  'dinosaur',
+  'unicorn',
+  'dragon',
+  'bunny',
+  'bear',
+  'bird',
+  'fish',
+  'butterfly',
+  'axolotl',
+];
+
 const GENERATING_MESSAGES = [
   'Creating your special pet...',
   'Adding some magic...',
@@ -68,7 +83,9 @@ export function PetRewardModal({
   onVisitPet,
   onCreatePet,
   pollImageStatus,
+  onPetTypeChange,
 }: PetRewardModalProps) {
+  const [selectedPetType, setSelectedPetType] = useState<PetType>(petType);
   const [isVisible, setIsVisible] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [step, setStep] = useState<ModalStep>('reveal');
@@ -78,7 +95,14 @@ export function PetRewardModal({
 
   // Use provided pet or created pet
   const displayPet = createdPet || pet;
-  const emoji = PET_EMOJIS[petType] || '🐾';
+  const emoji = PET_EMOJIS[selectedPetType] || '🐾';
+
+  // Sync selectedPetType with petType prop when modal opens
+  useEffect(() => {
+    if (show) {
+      setSelectedPetType(petType);
+    }
+  }, [show, petType]);
 
   useEffect(() => {
     if (show) {
@@ -125,8 +149,19 @@ export function PetRewardModal({
     }
   }, [createdPet, pollImageStatus]);
 
-  const handleProceedToCustomize = useCallback(() => {
+  const handleProceedToSelectType = useCallback(() => {
     setShowConfetti(false);
+    setStep('select-type');
+  }, []);
+
+  const handlePetTypeSelect = useCallback((type: PetType) => {
+    setSelectedPetType(type);
+    if (onPetTypeChange) {
+      onPetTypeChange(type);
+    }
+  }, [onPetTypeChange]);
+
+  const handleProceedToCustomize = useCallback(() => {
     setStep('customize');
   }, []);
 
@@ -227,26 +262,74 @@ export function PetRewardModal({
                 : 'Amazing score! You earned a new friend!'}
             </p>
 
-            {/* Pet Type Display */}
+            {/* Celebration Animation */}
             <div className="relative mb-6">
               <div className="w-40 h-40 mx-auto rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center shadow-lg animate-float">
-                <span className="text-7xl">{emoji}</span>
+                <span className="text-7xl">🎉</span>
               </div>
             </div>
 
-            {/* Pet Type Info */}
+            {/* Celebration message */}
             <div className="mb-6">
               <h3 className="text-xl font-bold text-gray-800">
-                A {PET_TYPE_LABELS[petType]}!
+                Congratulations!
               </h3>
               <p className="text-sm text-gray-500">
-                Now let's make it unique to you!
+                Now pick what kind of pet you want!
+              </p>
+            </div>
+
+            {/* Button */}
+            <Button onClick={handleProceedToSelectType} className="w-full">
+              Choose My Pet!
+            </Button>
+          </div>
+        )}
+
+        {/* Step: Select Pet Type */}
+        {step === 'select-type' && (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
+              Pick Your Pet!
+            </h2>
+            <p className="text-sm text-gray-500 text-center mb-6">
+              Which pet would you like?
+            </p>
+
+            {/* Pet Type Grid */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {ALL_PET_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => handlePetTypeSelect(type)}
+                  className={`
+                    flex flex-col items-center p-3 rounded-xl border-3 transition-all
+                    ${selectedPetType === type
+                      ? 'border-primary-500 bg-primary-50 scale-105 shadow-md'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                    }
+                  `}
+                >
+                  <span className="text-3xl mb-1">{PET_EMOJIS[type]}</span>
+                  <span className="text-xs font-medium text-gray-700">
+                    {PET_TYPE_LABELS[type]}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Selected pet display */}
+            <div className="bg-gradient-to-br from-primary-50 to-secondary-50 rounded-xl p-4 mb-6 text-center">
+              <span className="text-5xl">{PET_EMOJIS[selectedPetType]}</span>
+              <p className="text-sm font-medium text-gray-700 mt-2">
+                You chose a {PET_TYPE_LABELS[selectedPetType]}!
               </p>
             </div>
 
             {/* Button */}
             <Button onClick={handleProceedToCustomize} className="w-full">
-              Customize My Pet!
+              Customize My {PET_TYPE_LABELS[selectedPetType]}!
             </Button>
           </div>
         )}
@@ -260,7 +343,7 @@ export function PetRewardModal({
               </div>
             )}
             <PetCustomizationForm
-              petType={petType}
+              petType={selectedPetType}
               onSubmit={handleCustomizationSubmit}
               onCancel={onClose}
               isLoading={false}
@@ -273,7 +356,7 @@ export function PetRewardModal({
           <div className="p-8">
             <div className="mb-6">
               <div className="w-32 h-32 mx-auto rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center shadow-lg relative overflow-hidden">
-                <span className="text-6xl animate-pulse">{emoji}</span>
+                <span className="text-6xl animate-pulse">{PET_EMOJIS[selectedPetType]}</span>
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
               </div>
