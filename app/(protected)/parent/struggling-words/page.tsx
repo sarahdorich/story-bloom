@@ -152,14 +152,14 @@ export default function ParentStrugglingWordsPage() {
         {/* Toggle between single and bulk */}
         <div className="flex gap-2 mb-4">
           <Button
-            variant={inputMode === 'single' ? 'default' : 'outline'}
+            variant={inputMode === 'single' ? 'primary' : 'outline'}
             onClick={() => setInputMode('single')}
             size="sm"
           >
             Add One Word
           </Button>
           <Button
-            variant={inputMode === 'bulk' ? 'default' : 'outline'}
+            variant={inputMode === 'bulk' ? 'primary' : 'outline'}
             onClick={() => setInputMode('bulk')}
             size="sm"
           >
