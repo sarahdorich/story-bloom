@@ -180,15 +180,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       const weekStartDate = weekStart.toISOString().split('T')[0]
 
       // Upsert cash reward record
-      await supabase.rpc('upsert_cash_reward', {
-        p_child_id: session.child_id,
-        p_week_start_date: weekStartDate,
-        p_cash_earned: cashEarned,
-        p_words_mastered: 1,
-      }).catch(() => {
+      try {
+        await supabase.rpc('upsert_cash_reward', {
+          p_child_id: session.child_id,
+          p_week_start_date: weekStartDate,
+          p_cash_earned: cashEarned,
+          p_words_mastered: 1,
+        })
+      } catch {
         // Fallback if RPC doesn't exist yet
         console.log('Cash reward RPC not available, skipping')
-      })
+      }
     }
 
     const result: WordCheckResult = {
