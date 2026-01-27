@@ -1238,3 +1238,241 @@ export const SENTENCE_XP_REWARDS = {
   accuracyBonus100: 35,
   completionBonus: 15,
 } as const;
+
+// ============================================
+// Word Rescue Types
+// ============================================
+
+// Word mastery stages (visual progression)
+export const WORD_MASTERY_STAGES = ['seedling', 'growing', 'blooming', 'mastered'] as const;
+export type WordMasteryStage = (typeof WORD_MASTERY_STAGES)[number];
+
+// Stage display info
+export const MASTERY_STAGE_INFO: Record<WordMasteryStage, { emoji: string; label: string; color: string }> = {
+  seedling: { emoji: '🌱', label: 'Seedling', color: 'text-green-400' },
+  growing: { emoji: '🌿', label: 'Growing', color: 'text-green-500' },
+  blooming: { emoji: '🌸', label: 'Blooming', color: 'text-pink-500' },
+  mastered: { emoji: '⭐', label: 'Mastered', color: 'text-yellow-500' },
+};
+
+// Source of struggling word
+export const WORD_SOURCES = ['sentence_shenanigans', 'word_quest', 'manual'] as const;
+export type WordSource = (typeof WORD_SOURCES)[number];
+
+// Struggling word captured from practice or added manually
+export interface StrugglingWord {
+  id: string;
+  child_id: string;
+  word: string;
+  source: WordSource;
+  source_sentence_id: string | null;
+
+  // Teaching data
+  syllable_breakdown: string[] | null;
+  example_sentence: string | null;
+  phonetic_hint: string | null;
+
+  // Progress tracking
+  times_seen: number;
+  times_practiced: number;
+  times_correct: number;
+  current_stage: WordMasteryStage;
+  mastered_at: string | null;
+
+  // Audio (optional parent recording)
+  parent_audio_url: string | null;
+  parent_audio_storage_path: string | null;
+
+  first_seen_at: string;
+  last_practiced_at: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+// Word Rescue practice session
+export interface WordRescueSession {
+  id: string;
+  child_id: string;
+  buddy_pet_id: string | null;
+
+  // Session stats
+  words_practiced: number;
+  words_correct: number;
+  words_mastered: number;
+
+  // Rewards earned
+  coins_earned: number;
+  gems_earned: number;
+  stars_earned: number;
+  cash_earned: number;
+
+  // Timing
+  duration_seconds: number | null;
+  session_date: string;
+  started_at: string;
+  completed_at: string | null;
+
+  // Joined data
+  buddy_pet?: Pet;
+}
+
+// Individual word attempt within a session
+export interface WordRescueAttempt {
+  id: string;
+  session_id: string;
+  struggling_word_id: string;
+  spoken_text: string | null;
+  is_correct: boolean;
+  attempt_number: number;
+  used_word_coach: boolean;
+  coins_earned: number;
+  created_at: string;
+}
+
+// App settings (user-level, parent-configurable)
+export interface AppSettings {
+  id: string;
+  user_id: string;
+
+  // Mastery settings
+  mastery_correct_threshold: number;
+  mastery_require_different_days: boolean;
+
+  // Cash reward settings
+  cash_reward_enabled: boolean;
+  cash_per_mastered_word: number;
+  cash_milestone_bonus_enabled: boolean;
+  cash_milestone_10_words: number;
+  cash_milestone_25_words: number;
+  cash_milestone_50_words: number;
+  weekly_cash_cap: number;
+
+  // Game settings
+  words_per_session: number;
+  show_word_coach_automatically: boolean;
+
+  created_at: string;
+  updated_at: string;
+}
+
+// Default app settings values
+export const DEFAULT_APP_SETTINGS: Omit<AppSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
+  mastery_correct_threshold: 2,
+  mastery_require_different_days: false,
+  cash_reward_enabled: false,
+  cash_per_mastered_word: 0.10,
+  cash_milestone_bonus_enabled: true,
+  cash_milestone_10_words: 1.00,
+  cash_milestone_25_words: 3.00,
+  cash_milestone_50_words: 5.00,
+  weekly_cash_cap: 20.00,
+  words_per_session: 10,
+  show_word_coach_automatically: true,
+};
+
+// Weekly cash reward tracking
+export interface CashReward {
+  id: string;
+  child_id: string;
+  week_start_date: string;
+  words_mastered_this_week: number;
+  cash_earned: number;
+  is_paid: boolean;
+  paid_at: string | null;
+  paid_amount: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Reward amounts for Word Rescue
+export const WORD_RESCUE_REWARDS = {
+  coinsPerCorrect: 5,
+  bonusCoinsWithoutCoach: 3,
+  coinsPerStageAdvance: 5,
+  gemsPerMastery: 1,
+  starsPerMastery: 1,
+} as const;
+
+// Result from checking a word attempt
+export interface WordCheckResult {
+  correct: boolean;
+  coinsEarned: number;
+  isMastered: boolean;
+  cashEarned: number;
+  newStage: WordMasteryStage;
+  previousStage: WordMasteryStage;
+  stageAdvanced: boolean;
+}
+
+// Session statistics
+export interface WordRescueStats {
+  wordsRescued: number;
+  totalCoins: number;
+  totalGems: number;
+  totalStars: number;
+  cashEarned: number;
+  wordsMastered: number;
+}
+
+// Celebration data for reward display
+export interface CelebrationData {
+  word: string;
+  coinsEarned: number;
+  isMastered: boolean;
+  cashEarned: number;
+  newStage?: WordMasteryStage;
+}
+
+// Buddy encouragement phrases by situation
+export const BUDDY_PHRASES = {
+  start: [
+    "Let's rescue some words!",
+    "I know you can do it!",
+    "Ready to be word heroes?",
+    "Time to save some words!",
+  ],
+  correct: [
+    "Amazing! You did it!",
+    "That was perfect!",
+    "You're so smart!",
+    "Word rescued!",
+    "Great job!",
+  ],
+  incorrect: [
+    "Let's try that together!",
+    "I'll help you with this one!",
+    "No worries, we got this!",
+    "Let me help!",
+  ],
+  mastered: [
+    "WOW! You mastered that word!",
+    "That word is yours forever now!",
+    "You're a word rescue hero!",
+    "Amazing! Another word mastered!",
+  ],
+  encouragement: [
+    "You're doing great!",
+    "Keep going!",
+    "I believe in you!",
+    "You've got this!",
+  ],
+  stageUp: [
+    "Your word is growing!",
+    "Look how much your word grew!",
+    "That word is getting stronger!",
+  ],
+} as const;
+
+// Get a random phrase from a category
+export function getBuddyPhrase(category: keyof typeof BUDDY_PHRASES): string {
+  const phrases = BUDDY_PHRASES[category];
+  return phrases[Math.floor(Math.random() * phrases.length)];
+}
+
+// Calculate stage based on times correct and threshold
+export function calculateWordStage(timesCorrect: number, masteryThreshold: number): WordMasteryStage {
+  if (timesCorrect >= masteryThreshold) return 'mastered';
+  if (timesCorrect >= Math.ceil(masteryThreshold * 0.75)) return 'blooming';
+  if (timesCorrect >= 1) return 'growing';
+  return 'seedling';
+}
