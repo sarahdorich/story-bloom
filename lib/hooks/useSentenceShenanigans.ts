@@ -341,6 +341,25 @@ export function useSentenceShenanigans(
         }),
       }).catch(console.error)
 
+      // Capture struggling words (incorrect words) for Word Rescue (fire and forget)
+      const incorrectWords = wordResults
+        .filter((w) => !w.correct && w.word.length > 2)
+        .map((w) => ({
+          word: w.word,
+          sentenceId: currentSentence.id,
+        }))
+
+      if (incorrectWords.length > 0) {
+        fetch('/api/word-rescue/capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            childId,
+            words: incorrectWords,
+          }),
+        }).catch(console.error)
+      }
+
       // Note: Do NOT advance sentence here - let the caller control when to advance
       // so they can show feedback for the current sentence first
 

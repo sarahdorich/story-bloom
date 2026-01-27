@@ -5,6 +5,7 @@ import { useChild } from '../ProtectedLayoutClient'
 import { Button, Card } from '@/components/ui'
 import { PetCard } from '@/components/word-quest'
 import { usePets } from '@/lib/hooks/usePets'
+import { useStrugglingWords } from '@/lib/hooks/useStrugglingWords'
 
 interface GameCardProps {
   title: string
@@ -13,9 +14,10 @@ interface GameCardProps {
   href: string
   color: string
   available: boolean
+  badge?: number
 }
 
-function GameCard({ title, description, icon, href, color, available }: GameCardProps) {
+function GameCard({ title, description, icon, href, color, available, badge }: GameCardProps) {
   const router = useRouter()
 
   return (
@@ -27,6 +29,11 @@ function GameCard({ title, description, icon, href, color, available }: GameCard
       onClick={() => available && router.push(href)}
     >
       <div className={`absolute top-0 left-0 right-0 h-2 ${color}`} />
+      {badge !== undefined && badge > 0 && (
+        <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+          {badge > 99 ? '99+' : badge}
+        </div>
+      )}
       <div className="pt-6 pb-4 px-4 text-center">
         <div className="text-5xl mb-4">{icon}</div>
         <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
@@ -52,6 +59,15 @@ export default function GamesPage() {
   const router = useRouter()
   const { selectedChild, children } = useChild()
   const { pets, favoritePet } = usePets({ childId: selectedChild?.id || '' })
+  const { words: strugglingWords } = useStrugglingWords({
+    childId: selectedChild?.id || '',
+    autoFetch: !!selectedChild,
+  })
+
+  // Count words that need practice (not mastered yet)
+  const wordsNeedingPractice = strugglingWords.filter(
+    (w) => w.mastery_stage !== 'mastered'
+  ).length
 
   if (!selectedChild) {
     return (
@@ -112,6 +128,15 @@ export default function GamesPage() {
           href="/games/sentence-shenanigans"
           color="bg-secondary-500"
           available={true}
+        />
+        <GameCard
+          title="Word Rescue"
+          description="Practice tricky words with your pet buddy and earn cash rewards!"
+          icon="🆘"
+          href="/games/word-rescue"
+          color="bg-amber-500"
+          available={wordsNeedingPractice > 0}
+          badge={wordsNeedingPractice}
         />
       </div>
 
