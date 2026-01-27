@@ -361,7 +361,7 @@ export default function PracticePage() {
         onClose={() => router.push('/games/word-quest')}
         onVisitPet={() => {
           if (newPet) {
-            router.push(`/games/word-quest/pets/${newPet.id}`)
+            router.push(`/games/pets/${newPet.id}`)
           }
         }}
         onCreatePet={handleCreatePet}

@@ -107,11 +107,16 @@ export default function PracticeSessionPage({ params }: PageProps) {
     isSupported,
     status,
     transcript,
+    interimTranscript,
+    finalTranscript,
     startListening,
     stopListening,
+    finishListening,
     resetTranscript,
     error: speechError,
   } = useSpeechRecognition({
+    continuous: true,           // Enable continuous mode for slow readers
+    interimResults: true,       // Show words as they're spoken
     onResult: handleSpeechResult,
   })
 
@@ -298,14 +303,29 @@ export default function PracticeSessionPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Speech feedback */}
-      <div className="h-16 text-center mb-4">
-        {transcript && (
+      {/* Live reading feedback - shows words as child reads */}
+      <div className="min-h-20 text-center mb-4">
+        {status === 'listening' && (
+          <div className="bg-blue-50 rounded-xl px-6 py-4 inline-block max-w-lg">
+            <p className="text-gray-500 text-xs mb-1">I hear you saying:</p>
+            <p className="font-medium text-gray-700 text-lg">
+              {finalTranscript}
+              {finalTranscript && interimTranscript && ' '}
+              <span className="text-blue-500">{interimTranscript}</span>
+              {!finalTranscript && !interimTranscript && (
+                <span className="text-gray-400 italic">Start reading...</span>
+              )}
+            </p>
+          </div>
+        )}
+
+        {status !== 'listening' && transcript && (
           <div className="bg-gray-50 rounded-xl px-4 py-2 inline-block">
             <span className="text-gray-500 text-sm">I heard: </span>
             <span className="font-medium text-gray-700">&quot;{transcript}&quot;</span>
           </div>
         )}
+
         {speechError && (
           <span className="text-red-500 text-sm">{speechError}</span>
         )}
@@ -322,6 +342,28 @@ export default function PracticeSessionPage({ params }: PageProps) {
           >
             Got it!
           </Button>
+        ) : status === 'listening' ? (
+          // "Done Reading" button while listening in continuous mode
+          <div className="flex flex-col items-center gap-4">
+            <Button
+              size="lg"
+              onClick={finishListening}
+              className="px-8 py-4 text-lg bg-green-500 hover:bg-green-600"
+            >
+              <span className="flex items-center gap-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Done Reading!
+              </span>
+            </Button>
+
+            {/* Visual indicator that we're still listening */}
+            <div className="flex items-center gap-2 text-blue-500">
+              <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-sm">Recording... take your time!</span>
+            </div>
+          </div>
         ) : (
           <SpeechButton
             status={status}
@@ -331,9 +373,9 @@ export default function PracticeSessionPage({ params }: PageProps) {
           />
         )}
 
-        <p className="text-gray-500 text-sm text-center">
+        <p className="text-gray-500 text-sm text-center max-w-xs">
           {status === 'listening'
-            ? 'Listening... Read the sentence!'
+            ? 'Read the sentence aloud. Tap "Done Reading" when finished!'
             : lastResult === 'correct' && lastAccuracy === 100
               ? 'Perfect! Moving to next sentence...'
               : lastResult !== null && lastAccuracy < 100
@@ -345,7 +387,7 @@ export default function PracticeSessionPage({ params }: PageProps) {
           <Button
             variant="ghost"
             onClick={handleSkip}
-            disabled={lastResult !== null || isAdvancing}
+            disabled={lastResult !== null || isAdvancing || status === 'listening'}
           >
             Skip Sentence
           </Button>
@@ -398,7 +440,7 @@ export default function PracticeSessionPage({ params }: PageProps) {
         onClose={() => router.push('/games/sentence-shenanigans')}
         onVisitPet={() => {
           if (newPet) {
-            router.push(`/games/word-quest/pets/${newPet.id}`)
+            router.push(`/games/pets/${newPet.id}`)
           }
         }}
         onCreatePet={handleCreatePet}

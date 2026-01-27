@@ -184,7 +184,7 @@ export default function WordQuestPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-800">My Pets</h3>
             <button
-              onClick={() => router.push('/games/word-quest/pets')}
+              onClick={() => router.push('/games/pets')}
               className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
             >
               View All ({pets.length})
@@ -197,7 +197,7 @@ export default function WordQuestPage() {
             <div className="max-w-[200px] mx-auto">
               <PetCard
                 pet={favoritePet}
-                onClick={() => router.push(`/games/word-quest/pets/${favoritePet.id}`)}
+                onClick={() => router.push(`/games/pets/${favoritePet.id}`)}
               />
             </div>
           )}

@@ -6,6 +6,7 @@ import type { SpeechRecognitionStatus } from '@/lib/types'
 // Web Speech API type definitions
 interface SpeechRecognitionResult {
   readonly length: number
+  readonly isFinal: boolean
   item(index: number): SpeechRecognitionAlternative
   [index: number]: SpeechRecognitionAlternative
 }
@@ -56,14 +57,21 @@ interface ISpeechRecognitionConstructor {
 interface UseSpeechRecognitionOptions {
   onResult?: (transcript: string) => void
   onError?: (error: string) => void
+  // Continuous mode options
+  continuous?: boolean           // Enable continuous listening (default: false)
+  interimResults?: boolean       // Show words as they're recognized (default: false)
+  onInterimResult?: (interim: string) => void  // Callback for interim results
 }
 
 interface UseSpeechRecognitionReturn {
   isSupported: boolean
   status: SpeechRecognitionStatus
   transcript: string
+  interimTranscript: string      // Current interim (unfinalized) text
+  finalTranscript: string        // Accumulated finalized text
   startListening: () => void
   stopListening: () => void
+  finishListening: () => void    // For continuous mode "Done" action
   resetTranscript: () => void
   error: string | null
 }
@@ -74,6 +82,8 @@ export function useSpeechRecognition(
   const [isSupported, setIsSupported] = useState(false)
   const [status, setStatus] = useState<SpeechRecognitionStatus>('idle')
   const [transcript, setTranscript] = useState('')
+  const [interimTranscript, setInterimTranscript] = useState('')
+  const [finalTranscript, setFinalTranscript] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
@@ -82,6 +92,8 @@ export function useSpeechRecognition(
   const abortRetryCountRef = useRef(0)
   const maxAbortRetries = 3
   const isListeningIntentRef = useRef(false)
+  // Track accumulated final transcript for continuous mode (avoids stale closure issues)
+  const finalTranscriptRef = useRef('')
 
   useEffect(() => {
     // Access the Web Speech API from window
@@ -105,8 +117,9 @@ export function useSpeechRecognition(
 
     if (SpeechRecognitionAPI) {
       const recognition = new SpeechRecognitionAPI()
-      recognition.continuous = false
-      recognition.interimResults = false
+      // Apply options - continuous and interimResults based on options
+      recognition.continuous = optionsRef.current.continuous ?? false
+      recognition.interimResults = optionsRef.current.interimResults ?? false
       recognition.lang = 'en-US'
 
       recognition.onstart = () => {
@@ -116,12 +129,46 @@ export function useSpeechRecognition(
       }
 
       recognition.onresult = (event: ISpeechRecognitionEvent) => {
-        const result = event.results[event.results.length - 1]
-        const text = result[0].transcript.trim().toLowerCase()
-        setTranscript(text)
-        setStatus('processing')
-        isListeningIntentRef.current = false
-        optionsRef.current.onResult?.(text)
+        const isContinuousMode = optionsRef.current.continuous
+
+        if (isContinuousMode) {
+          // Continuous mode: accumulate final results, show interim
+          let interim = ''
+          let newFinal = ''
+
+          for (let i = 0; i < event.results.length; i++) {
+            const result = event.results[i]
+            const text = result[0].transcript
+
+            if (result.isFinal) {
+              newFinal += text + ' '
+            } else {
+              interim += text
+            }
+          }
+
+          // Update interim transcript (current unfinalized text)
+          setInterimTranscript(interim)
+
+          // Update final transcript if we got new final results
+          if (newFinal) {
+            finalTranscriptRef.current = newFinal.trim()
+            setFinalTranscript(newFinal.trim())
+          }
+
+          // Call interim callback if provided
+          if (interim && optionsRef.current.onInterimResult) {
+            optionsRef.current.onInterimResult(interim)
+          }
+        } else {
+          // Non-continuous mode: original behavior
+          const result = event.results[event.results.length - 1]
+          const text = result[0].transcript.trim().toLowerCase()
+          setTranscript(text)
+          setStatus('processing')
+          isListeningIntentRef.current = false
+          optionsRef.current.onResult?.(text)
+        }
       }
 
       recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
@@ -154,12 +201,21 @@ export function useSpeechRecognition(
       }
 
       recognition.onend = () => {
-        setStatus((prevStatus) => {
-          if (prevStatus === 'listening') {
-            return 'idle'
+        // In continuous mode, auto-restart if user still intends to listen
+        if (optionsRef.current.continuous && isListeningIntentRef.current) {
+          try {
+            recognition.start()
+          } catch {
+            // Recognition might already be running, ignore
           }
-          return prevStatus
-        })
+        } else {
+          setStatus((prevStatus) => {
+            if (prevStatus === 'listening') {
+              return 'idle'
+            }
+            return prevStatus
+          })
+        }
       }
 
       recognitionRef.current = recognition
@@ -175,6 +231,9 @@ export function useSpeechRecognition(
     if (recognitionRef.current && status !== 'listening') {
       setError(null)
       setTranscript('')
+      setInterimTranscript('')
+      setFinalTranscript('')
+      finalTranscriptRef.current = ''
       isListeningIntentRef.current = true
       abortRetryCountRef.current = 0
       try {
@@ -195,17 +254,50 @@ export function useSpeechRecognition(
 
   const resetTranscript = useCallback(() => {
     setTranscript('')
+    setInterimTranscript('')
+    setFinalTranscript('')
+    finalTranscriptRef.current = ''
     setStatus('idle')
     setError(null)
     isListeningIntentRef.current = false
   }, [])
 
+  // For continuous mode: finalize and process the complete transcript
+  const finishListening = useCallback(() => {
+    if (recognitionRef.current) {
+      isListeningIntentRef.current = false
+      recognitionRef.current.stop()
+
+      // Combine final + interim for complete transcript
+      const fullTranscript = (finalTranscriptRef.current + ' ' + interimTranscript).trim().toLowerCase()
+
+      if (fullTranscript) {
+        setTranscript(fullTranscript)
+        setStatus('processing')
+        // Fire the onResult callback with complete transcript
+        optionsRef.current.onResult?.(fullTranscript)
+      } else {
+        // Nothing was recognized
+        setError("I didn't hear anything. Try tapping the microphone and reading again!")
+        setStatus('idle')
+      }
+
+      // Clear interim states
+      setInterimTranscript('')
+      setFinalTranscript('')
+      finalTranscriptRef.current = ''
+    }
+  }, [interimTranscript])
+
   return {
     isSupported,
     status,
     transcript,
+    interimTranscript,
+    finalTranscript,
     startListening,
     stopListening,
+    finishListening,
     resetTranscript,
     error,
   }
