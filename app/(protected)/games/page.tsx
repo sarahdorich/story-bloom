@@ -66,7 +66,7 @@ export default function GamesPage() {
 
   // Count words that need practice (not mastered yet)
   const wordsNeedingPractice = strugglingWords.filter(
-    (w) => w.mastery_stage !== 'mastered'
+    (w) => w.current_stage !== 'mastered'
   ).length
 
   if (!selectedChild) {
