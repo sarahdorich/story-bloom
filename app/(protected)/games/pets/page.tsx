@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useChild } from '../../../ProtectedLayoutClient'
+import { useChild } from '../../ProtectedLayoutClient'
 import { usePets } from '@/lib/hooks/usePets'
 import { PetCard } from '@/components/word-quest'
 import { Button, Card } from '@/components/ui'
@@ -14,7 +14,7 @@ export default function PetsPage() {
   })
 
   if (!selectedChild) {
-    router.push('/games/word-quest')
+    router.push('/games')
     return null
   }
 
@@ -23,7 +23,7 @@ export default function PetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <button
-          onClick={() => router.push('/games/word-quest')}
+          onClick={() => router.push('/games')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
         >
           <svg
@@ -56,7 +56,7 @@ export default function PetsPage() {
       {error && (
         <Card className="text-center py-8">
           <p className="text-red-500 mb-4">{error}</p>
-          <Button onClick={() => router.push('/games/word-quest')}>Go Back</Button>
+          <Button onClick={() => router.push('/games')}>Go Back</Button>
         </Card>
       )}
 
@@ -66,10 +66,10 @@ export default function PetsPage() {
           <div className="text-6xl mb-4">🐾</div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">No Pets Yet!</h2>
           <p className="text-gray-600 mb-6">
-            Practice reading words to earn your first pet friend!
+            Play games and practice reading to earn your first pet friend!
           </p>
-          <Button onClick={() => router.push('/games/word-quest/practice')}>
-            Start Practice
+          <Button onClick={() => router.push('/games')}>
+            Play Games
           </Button>
         </Card>
       )}
@@ -86,7 +86,7 @@ export default function PetsPage() {
               <PetCard
                 key={pet.id}
                 pet={pet}
-                onClick={() => router.push(`/games/word-quest/pets/${pet.id}`)}
+                onClick={() => router.push(`/games/pets/${pet.id}`)}
               />
             ))}
 

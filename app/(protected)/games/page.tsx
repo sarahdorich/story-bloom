@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useChild } from '../ProtectedLayoutClient'
 import { Button, Card } from '@/components/ui'
+import { PetCard } from '@/components/word-quest'
+import { usePets } from '@/lib/hooks/usePets'
 
 interface GameCardProps {
   title: string
@@ -49,6 +51,7 @@ function GameCard({ title, description, icon, href, color, available }: GameCard
 export default function GamesPage() {
   const router = useRouter()
   const { selectedChild, children } = useChild()
+  const { pets, favoritePet } = usePets({ childId: selectedChild?.id || '' })
 
   if (!selectedChild) {
     return (
@@ -111,6 +114,35 @@ export default function GamesPage() {
           available={true}
         />
       </div>
+
+      {/* My Pets Section */}
+      {pets.length > 0 && (
+        <Card className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-800">My Pets</h3>
+            <button
+              onClick={() => router.push('/games/pets')}
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+            >
+              View All ({pets.length})
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          {favoritePet && (
+            <div className="max-w-[200px] mx-auto">
+              <PetCard
+                pet={favoritePet}
+                onClick={() => router.push(`/games/pets/${favoritePet.id}`)}
+              />
+            </div>
+          )}
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Play games to make {favoritePet?.name} happy!
+          </p>
+        </Card>
+      )}
 
       {/* How Games Work */}
       <Card className="mb-8">
