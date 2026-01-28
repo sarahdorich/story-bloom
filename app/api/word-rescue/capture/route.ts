@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { syllabify, normalizeWord, shouldExcludeWord } from '@/lib/utils/syllabify'
+import { syllabify, normalizeWord } from '@/lib/utils/syllabify'
 
 interface CaptureWordInput {
   word: string
@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
     for (const wordInput of words) {
       const normalizedWord = normalizeWord(wordInput.word)
 
-      // Skip words that should be excluded
-      if (shouldExcludeWord(normalizedWord)) {
+      // Skip empty or invalid words (no API call for game performance)
+      if (!normalizedWord || !/^[a-z']+$/i.test(normalizedWord)) {
         skipped++
         continue
       }

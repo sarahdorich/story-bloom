@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { syllabify, normalizeWord, shouldExcludeWord } from '@/lib/utils/syllabify'
+import { syllabify, normalizeWord } from '@/lib/utils/syllabify'
+import { validateWord } from '@/lib/utils/spellcheck'
 
 // GET: List struggling words for a child
 export async function GET(request: NextRequest) {
@@ -127,11 +128,10 @@ export async function POST(request: NextRequest) {
     if (word) {
       const normalized = normalizeWord(word)
 
-      if (shouldExcludeWord(normalized)) {
-        return NextResponse.json(
-          { error: 'Word is too short or too common' },
-          { status: 400 }
-        )
+      // Validate spelling
+      const validationError = await validateWord(normalized)
+      if (validationError) {
+        return NextResponse.json({ error: validationError }, { status: 400 })
       }
 
       const syllables = syllabify(normalized)
@@ -177,7 +177,9 @@ export async function POST(request: NextRequest) {
     for (const w of wordsToAdd) {
       const normalized = normalizeWord(w)
 
-      if (shouldExcludeWord(normalized)) {
+      // Validate spelling
+      const validationError = await validateWord(normalized)
+      if (validationError) {
         skipped++
         continue
       }
