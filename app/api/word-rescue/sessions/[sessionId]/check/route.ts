@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { isWordMatch } from '@/lib/hooks/useWordQuest'
+import { isWordMatch } from '@/lib/utils/wordMatch'
 import {
   WORD_RESCUE_REWARDS,
   calculateWordStage,
