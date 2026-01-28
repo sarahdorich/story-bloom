@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useChild } from '../../ProtectedLayoutClient'
 import { useCashRewards } from '@/lib/hooks/useCashRewards'
 import { useAppSettings } from '@/lib/hooks/useAppSettings'
-import { Button, Card, Input } from '@/components/ui'
+import { Button, Card, NumberInput } from '@/components/ui'
 
 export default function ParentRewardsPage() {
   const { children, selectedChild, selectChild } = useChild()
@@ -96,23 +96,18 @@ export default function ParentRewardsPage() {
         {settings?.cash_reward_enabled && (
           <div className="space-y-4 pt-4 border-t">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Amount per mastered word
               </label>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">$</span>
-                <Input
-                  type="number"
-                  min="0.01"
-                  max="5.00"
-                  step="0.05"
-                  value={settings?.cash_per_mastered_word ?? 0.10}
-                  onChange={(e) =>
-                    updateSettings({ cash_per_mastered_word: parseFloat(e.target.value) || 0.10 })
-                  }
-                  className="w-24"
-                />
-              </div>
+              <NumberInput
+                value={settings?.cash_per_mastered_word ?? 0.10}
+                onChange={(value) => updateSettings({ cash_per_mastered_word: value })}
+                min={0.01}
+                max={5.00}
+                step={0.05}
+                decimals={2}
+                prefix="$"
+              />
             </div>
 
             <div className="flex items-center gap-2">
@@ -131,80 +126,60 @@ export default function ParentRewardsPage() {
             </div>
 
             {settings?.cash_milestone_bonus_enabled && (
-              <div className="grid grid-cols-3 gap-4 pl-6">
+              <div className="space-y-3 pl-6">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">10 words bonus</label>
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-500 text-sm">$</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="10"
-                      step="0.50"
-                      value={settings?.cash_milestone_10_words ?? 1.00}
-                      onChange={(e) =>
-                        updateSettings({ cash_milestone_10_words: parseFloat(e.target.value) || 1.00 })
-                      }
-                      className="w-20 text-sm"
-                    />
-                  </div>
+                  <NumberInput
+                    value={settings?.cash_milestone_10_words ?? 1.00}
+                    onChange={(value) => updateSettings({ cash_milestone_10_words: value })}
+                    min={0}
+                    max={10}
+                    step={0.50}
+                    decimals={2}
+                    prefix="$"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">25 words bonus</label>
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-500 text-sm">$</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="20"
-                      step="0.50"
-                      value={settings?.cash_milestone_25_words ?? 3.00}
-                      onChange={(e) =>
-                        updateSettings({ cash_milestone_25_words: parseFloat(e.target.value) || 3.00 })
-                      }
-                      className="w-20 text-sm"
-                    />
-                  </div>
+                  <NumberInput
+                    value={settings?.cash_milestone_25_words ?? 3.00}
+                    onChange={(value) => updateSettings({ cash_milestone_25_words: value })}
+                    min={0}
+                    max={20}
+                    step={0.50}
+                    decimals={2}
+                    prefix="$"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">50 words bonus</label>
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-500 text-sm">$</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="20"
-                      step="0.50"
-                      value={settings?.cash_milestone_50_words ?? 5.00}
-                      onChange={(e) =>
-                        updateSettings({ cash_milestone_50_words: parseFloat(e.target.value) || 5.00 })
-                      }
-                      className="w-20 text-sm"
-                    />
-                  </div>
+                  <NumberInput
+                    value={settings?.cash_milestone_50_words ?? 5.00}
+                    onChange={(value) => updateSettings({ cash_milestone_50_words: value })}
+                    min={0}
+                    max={20}
+                    step={0.50}
+                    decimals={2}
+                    prefix="$"
+                  />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Weekly cap
               </label>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-500">$</span>
-                <Input
-                  type="number"
-                  min="1"
-                  max="100"
-                  step="1"
-                  value={settings?.weekly_cash_cap ?? 20.00}
-                  onChange={(e) =>
-                    updateSettings({ weekly_cash_cap: parseFloat(e.target.value) || 20.00 })
-                  }
-                  className="w-24"
-                />
-                <span className="text-sm text-gray-500">per week</span>
-              </div>
+              <NumberInput
+                value={settings?.weekly_cash_cap ?? 20.00}
+                onChange={(value) => updateSettings({ weekly_cash_cap: value })}
+                min={1}
+                max={100}
+                step={1}
+                decimals={0}
+                prefix="$"
+                suffix="per week"
+              />
             </div>
           </div>
         )}
