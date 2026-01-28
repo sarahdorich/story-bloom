@@ -54,7 +54,14 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ settings })
+    // Transform settings to include has_parent_pin and exclude sensitive fields
+    const { parent_pin_hash, pin_reset_token, pin_reset_token_expires_at, ...safeSettings } = settings
+    const settingsResponse = {
+      ...safeSettings,
+      has_parent_pin: !!parent_pin_hash,
+    }
+
+    return NextResponse.json({ settings: settingsResponse })
   } catch (error) {
     console.error('Error in app-settings GET:', error)
     return NextResponse.json(

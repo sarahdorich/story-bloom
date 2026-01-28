@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useChild } from '../../ProtectedLayoutClient'
 import { useStrugglingWords } from '@/lib/hooks/useStrugglingWords'
 import { useAppSettings } from '@/lib/hooks/useAppSettings'
-import { Button, Input, Card, TextArea } from '@/components/ui'
+import { Button, Input, Card, TextArea, NumberInput } from '@/components/ui'
 import { MASTERY_STAGE_INFO, type StrugglingWord, type WordMasteryStage } from '@/lib/types'
 
 type TabFilter = 'all' | WordMasteryStage
@@ -343,39 +343,35 @@ said`}
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Mastery Threshold (times correct)
             </label>
-            <Input
-              type="number"
-              min="1"
-              max="10"
+            <NumberInput
               value={settings?.mastery_correct_threshold ?? 2}
-              onChange={(e) =>
-                updateSettings({ mastery_correct_threshold: parseInt(e.target.value) || 2 })
-              }
-              className="w-32"
+              onChange={(value) => updateSettings({ mastery_correct_threshold: value })}
+              min={1}
+              max={10}
+              step={1}
+              decimals={0}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-2">
               How many times {selectedChild.name} must say a word correctly for it to be mastered
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Words per Session
             </label>
-            <Input
-              type="number"
-              min="5"
-              max="20"
+            <NumberInput
               value={settings?.words_per_session ?? 10}
-              onChange={(e) =>
-                updateSettings({ words_per_session: parseInt(e.target.value) || 10 })
-              }
-              className="w-32"
+              onChange={(value) => updateSettings({ words_per_session: value })}
+              min={5}
+              max={20}
+              step={1}
+              decimals={0}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 mt-2">
               How many words to practice in each Word Rescue session
             </p>
           </div>

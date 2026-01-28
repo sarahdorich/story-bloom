@@ -27,6 +27,7 @@ export default function WordRescuePracticePage() {
   const [lastResult, setLastResult] = useState<'correct' | 'incorrect' | 'mastered' | 'stageUp' | null>(null)
   const [usedCoachForCurrentWord, setUsedCoachForCurrentWord] = useState(false)
   const [lastAttemptCorrect, setLastAttemptCorrect] = useState<boolean | null>(null)
+  const [needsReset, setNeedsReset] = useState(false)
 
   const {
     words,
@@ -74,6 +75,8 @@ export default function WordRescuePracticePage() {
           setShowCelebration(true)
         } else {
           setLastResult('incorrect')
+          // Signal that we need to reset speech recognition so they can try again
+          setNeedsReset(true)
           // Don't auto-show word coach - let them click "Need help?"
         }
       }
@@ -105,8 +108,17 @@ export default function WordRescuePracticePage() {
     setUsedCoachForCurrentWord(false)
     setLastAttemptCorrect(null)
     setLastResult(null)
+    setNeedsReset(false)
     resetTranscript()
   }, [currentWordIndex, resetTranscript])
+
+  // Reset speech recognition after incorrect answer so child can try again
+  useEffect(() => {
+    if (needsReset) {
+      resetTranscript()
+      setNeedsReset(false)
+    }
+  }, [needsReset, resetTranscript])
 
   const handleBuddySelect = async (pet: Pet) => {
     await startSession(pet.id)

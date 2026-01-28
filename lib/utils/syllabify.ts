@@ -183,22 +183,3 @@ export function normalizeWord(word: string): string {
     .replace(/[^a-z']/g, ''); // Remove any remaining non-letters except apostrophes
 }
 
-/**
- * Checks if a word should be excluded from the struggling words list.
- * Excludes very short words and common words that are too basic.
- */
-export function shouldExcludeWord(word: string): boolean {
-  const normalized = normalizeWord(word);
-
-  // Too short
-  if (normalized.length < 2) return true;
-
-  // Very common words that shouldn't be tracked as "struggling"
-  const commonWords = new Set([
-    'a', 'an', 'the', 'i', 'me', 'my', 'we', 'us', 'our',
-    'is', 'am', 'are', 'was', 'be', 'to', 'of', 'in', 'on',
-    'it', 'at', 'by', 'or', 'as', 'so', 'no', 'up', 'if',
-  ]);
-
-  return commonWords.has(normalized);
-}

@@ -126,3 +126,58 @@ The app uses an **API-gated architecture** where users interact with data throug
    - User A can read/modify user B's private data (check for missing `user_id = auth.uid()` on user-owned tables)
    - DELETE policies without proper ownership checks
    - Policies that bypass intended access controls (not just permissive-looking policies with API gating)
+
+### Authentication Architecture
+
+The app uses Supabase Auth with the following patterns:
+
+1. **User isolation through authentication, not client storage**: All protected routes (`app/(protected)/**`) require an authenticated Supabase session. API routes verify the user via `supabase.auth.getUser()` and query data scoped to that user's ID. Client-side storage (localStorage, sessionStorage) is NOT the source of truth for user identity.
+
+2. **Session storage for UI state only**: When session storage is used (e.g., to remember if a PIN was verified this session), it controls UI flow but NOT data access. The backend always re-verifies the authenticated user and returns only their data. Different users logging into the same browser get different data because API calls are scoped by `user_id` from the auth session.
+
+3. **Don't flag client storage user isolation issues** when:
+   - The storage is for UI convenience (modal state, verification flags, preferences)
+   - Backend APIs verify the user independently via auth
+   - Data queries filter by authenticated user ID
+
+4. **When to actually flag session/storage issues**:
+   - Client storage used as the sole access control (no backend verification)
+   - Sensitive data stored in client storage (tokens, PII, etc.)
+   - Storage used to bypass authentication or authorization checks
+
+---
+
+## Classifying Issues: Required vs Future Enhancements
+
+Not every valid suggestion should block a PR. Use this framework:
+
+### Required Changes (PR Blockers)
+
+Issues that MUST be fixed before merging:
+
+- **Security vulnerabilities**: Auth bypasses, data exposure, injection attacks
+- **Data loss or corruption risk**: Operations that could destroy or corrupt user data
+- **Breaking changes**: API contracts broken, features removed without migration
+- **Critical bugs**: Code that will crash or fail for users in common scenarios
+
+### Future Enhancements (Non-Blocking)
+
+Valid improvements that should NOT block the PR:
+
+- **Nice-to-have security hardening**: Rate limiting for low-risk endpoints, additional validation
+- **Performance optimizations**: Caching, query optimization (unless causing real issues)
+- **Code organization**: Extracting components, refactoring for readability
+- **Best practices**: Switching from `fetch+useState` to React Query (if current code works)
+- **Theoretical concerns**: "This could be a problem if..." without a realistic scenario
+
+When you identify a valid improvement that isn't a blocker, add it under a **"Future Enhancements"** section rather than in Required Changes. Example:
+
+```markdown
+### Future Enhancements
+
+These are valid improvements that don't block this PR:
+
+1. **Rate limiting for PIN verification**: While the current 4-digit PIN could theoretically be brute-forced, the risk is low because [reasons]. Consider adding a delay after failed attempts in a future iteration.
+```
+
+This keeps the review actionable and prevents scope creep while still documenting good ideas.

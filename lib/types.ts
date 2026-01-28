@@ -1351,12 +1351,22 @@ export interface AppSettings {
   words_per_session: number;
   show_word_coach_automatically: boolean;
 
+  // Parent PIN (for protecting parent-only features)
+  parent_pin_hash: string | null;
+  pin_reset_token: string | null;
+  pin_reset_token_expires_at: string | null;
+
   created_at: string;
   updated_at: string;
 }
 
+// App settings response with derived fields (for client use)
+export interface AppSettingsResponse extends Omit<AppSettings, 'parent_pin_hash' | 'pin_reset_token' | 'pin_reset_token_expires_at'> {
+  has_parent_pin: boolean;
+}
+
 // Default app settings values
-export const DEFAULT_APP_SETTINGS: Omit<AppSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
+export const DEFAULT_APP_SETTINGS: Omit<AppSettings, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'parent_pin_hash' | 'pin_reset_token' | 'pin_reset_token_expires_at'> = {
   mastery_correct_threshold: 2,
   mastery_require_different_days: false,
   cash_reward_enabled: false,
