@@ -54,8 +54,20 @@ interface UseSentenceShenanigansReturn {
 }
 
 /**
+ * Common filler words and hesitation sounds that children make while reading.
+ * These should be filtered out before alignment.
+ */
+const FILLER_WORDS = new Set([
+  'um', 'uh', 'umm', 'uhh', 'erm', 'er', 'ah', 'ahh',
+  'like', 'so', 'well', 'okay', 'ok',
+  'hmm', 'hm', 'mm', 'mmm',
+  'oh', 'ooh',
+])
+
+/**
  * Calculate the accuracy of a spoken sentence compared to the target sentence.
  * Uses word-level comparison with fuzzy matching from useWordQuest.
+ * Enhanced for children's voices with filler word filtering and improved alignment.
  */
 export function calculateSentenceAccuracy(
   spoken: string,
@@ -70,7 +82,13 @@ export function calculateSentenceAccuracy(
       .trim()
   }
 
-  const spokenWords = normalizeText(spoken).split(/\s+/).filter(w => w.length > 0)
+  // Filter out filler words from spoken text (children often say "um", "uh", etc.)
+  const filterFillers = (words: string[]): string[] => {
+    return words.filter(w => !FILLER_WORDS.has(w.toLowerCase()))
+  }
+
+  const rawSpokenWords = normalizeText(spoken).split(/\s+/).filter(w => w.length > 0)
+  const spokenWords = filterFillers(rawSpokenWords)
   const targetWords = normalizeText(target).split(/\s+/).filter(w => w.length > 0)
 
   if (targetWords.length === 0) {
@@ -80,7 +98,7 @@ export function calculateSentenceAccuracy(
   const wordResults: SentenceWordResult[] = []
   let correctCount = 0
 
-  // Use alignment to handle insertions/deletions/substitutions
+  // Use improved alignment to handle insertions/deletions/substitutions
   const alignment = alignWords(targetWords, spokenWords)
 
   for (let i = 0; i < targetWords.length; i++) {
@@ -108,28 +126,68 @@ export function calculateSentenceAccuracy(
 /**
  * Align spoken words to target words, handling insertions and deletions.
  * Returns an array of spoken words aligned to target word positions.
+ *
+ * Enhanced algorithm for children's speech:
+ * - Handles word repetitions (stuttering: "the the dog")
+ * - Handles skipped words gracefully
+ * - Uses fuzzy matching with lookahead to find best alignment
+ * - Looks further ahead when words might be out of order
  */
 function alignWords(target: string[], spoken: string[]): (string | null)[] {
   const result: (string | null)[] = new Array(target.length).fill(null)
 
+  if (spoken.length === 0) {
+    return result
+  }
+
   let spokenIndex = 0
 
-  for (let i = 0; i < target.length && spokenIndex < spoken.length; i++) {
-    // Look ahead for a match within next 2 spoken words
+  for (let i = 0; i < target.length; i++) {
+    if (spokenIndex >= spoken.length) {
+      // No more spoken words to align
+      break
+    }
+
+    // Look ahead for a match within next 3 spoken words (increased from 2)
+    // This helps when children repeat words or add extra words
     let foundMatch = false
-    for (let j = 0; j <= 2 && spokenIndex + j < spoken.length; j++) {
-      if (isWordMatch(spoken[spokenIndex + j], target[i])) {
-        result[i] = spoken[spokenIndex + j]
+    const lookaheadLimit = Math.min(3, spoken.length - spokenIndex)
+
+    for (let j = 0; j < lookaheadLimit; j++) {
+      const candidateWord = spoken[spokenIndex + j]
+
+      if (isWordMatch(candidateWord, target[i])) {
+        result[i] = candidateWord
         spokenIndex = spokenIndex + j + 1
         foundMatch = true
         break
       }
     }
 
-    // If no match found in lookahead, assign current spoken word anyway
-    if (!foundMatch && spokenIndex < spoken.length) {
-      result[i] = spoken[spokenIndex]
-      spokenIndex++
+    // If no match in immediate lookahead, check if current spoken word
+    // matches any upcoming target word (child might have skipped ahead)
+    if (!foundMatch) {
+      const currentSpoken = spoken[spokenIndex]
+      let matchesLaterTarget = false
+
+      // Check if current spoken word matches a target word we haven't reached yet
+      for (let k = i + 1; k < Math.min(i + 3, target.length); k++) {
+        if (isWordMatch(currentSpoken, target[k])) {
+          matchesLaterTarget = true
+          break
+        }
+      }
+
+      // If the current spoken word matches a later target, don't consume it
+      // for this position - leave it for when we reach that target word
+      if (!matchesLaterTarget) {
+        // Assign current spoken word to this position even if it doesn't match
+        // This gives the fuzzy matcher a chance to evaluate it
+        result[i] = currentSpoken
+        spokenIndex++
+      }
+      // If it matches a later target, we leave this position null (skipped)
+      // and don't advance spokenIndex so we can use it later
     }
   }
 
