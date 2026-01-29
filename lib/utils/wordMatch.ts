@@ -65,14 +65,57 @@ function levenshteinDistance(a: string, b: string): number {
 
 function arePhoneticallySimilar(spoken: string, target: string): boolean {
   // Common speech recognition substitutions for young readers
+  // Extended set to better handle children's pronunciation variations
   const substitutions: [RegExp, string][] = [
-    [/th/g, 'f'], // "the" -> "fe"
-    [/th/g, 'd'], // "the" -> "de"
-    [/wh/g, 'w'], // "what" -> "wat"
-    [/ph/g, 'f'], // "phone" -> "fone"
-    [/ck/g, 'k'], // "back" -> "bak"
-    [/ght/g, 't'], // "night" -> "nit"
+    // TH sounds - children often substitute these
+    [/th/g, 'f'],   // "the" -> "fe", "three" -> "free"
+    [/th/g, 'd'],   // "the" -> "de", "this" -> "dis"
+    [/th/g, 'v'],   // "the" -> "ve", "father" -> "faver"
+    [/th/g, 's'],   // "think" -> "sink"
+    [/th/g, 't'],   // "three" -> "tree"
+
+    // W sounds
+    [/wh/g, 'w'],   // "what" -> "wat"
+    [/w/g, 'v'],    // Some accents: "water" -> "vater"
+
+    // R sounds - children often struggle with R
+    [/r/g, 'w'],    // "rabbit" -> "wabbit"
+    [/er$/g, 'a'],  // "water" -> "wata"
+    [/or$/g, 'a'],  // "doctor" -> "docta"
+
+    // L sounds
+    [/l/g, 'w'],    // "little" -> "wittle"
+    [/l/g, 'y'],    // "love" -> "yove"
+
+    // Other common substitutions
+    [/ph/g, 'f'],   // "phone" -> "fone"
+    [/ck/g, 'k'],   // "back" -> "bak"
+    [/ght/g, 't'],  // "night" -> "nit"
     [/tion/g, 'shun'], // "action" -> "akshun"
+    [/sion/g, 'zhun'], // "vision" -> "vizhun"
+
+    // S and SH sounds
+    [/sh/g, 's'],   // "ship" -> "sip"
+    [/s/g, 'th'],   // "sun" -> "thun" (lisp)
+    [/ch/g, 'sh'],  // "chip" -> "ship"
+    [/ch/g, 't'],   // "chip" -> "tip"
+
+    // Vowel reductions common in children's speech
+    [/ing$/g, 'in'], // "running" -> "runnin"
+    [/ed$/g, 'd'],   // "walked" -> "walkd"
+    [/ed$/g, 't'],   // "jumped" -> "jumpt"
+
+    // Double letters simplified
+    [/ll/g, 'l'],   // "ball" -> "bal"
+    [/ss/g, 's'],   // "miss" -> "mis"
+    [/tt/g, 't'],   // "butter" -> "buter"
+    [/ff/g, 'f'],   // "stuff" -> "stuf"
+
+    // Silent letters and common drops
+    [/kn/g, 'n'],   // "know" -> "now"
+    [/wr/g, 'r'],   // "write" -> "rite"
+    [/gn/g, 'n'],   // "gnome" -> "nome"
+    [/mb$/g, 'm'],  // "climb" -> "clim"
   ]
 
   let normalizedSpoken = spoken
@@ -83,5 +126,11 @@ function arePhoneticallySimilar(spoken: string, target: string): boolean {
     normalizedTarget = normalizedTarget.replace(pattern, replacement)
   }
 
-  return normalizedSpoken === normalizedTarget
+  // Direct match after phonetic normalization
+  if (normalizedSpoken === normalizedTarget) return true
+
+  // Also check with Levenshtein distance after phonetic normalization
+  // This catches cases where multiple substitutions compound
+  const distance = levenshteinDistance(normalizedSpoken, normalizedTarget)
+  return distance <= 1
 }

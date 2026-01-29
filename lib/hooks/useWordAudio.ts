@@ -48,12 +48,21 @@ export function useWordAudio(): UseWordAudioReturn {
       try {
         const supabase = createClient()
 
+        // Get the authenticated user's ID for the storage path
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) {
+          throw new Error('Not authenticated')
+        }
+
         // Generate unique filename
+        // Path structure: userId/childId/wordId/filename (matches storage policy)
         const ext = getExtensionFromMime(audioBlob.type)
         const timestamp = Date.now()
         const randomId = Math.random().toString(36).substring(2, 9)
         const fileName = `${timestamp}-${randomId}.${ext}`
-        const storagePath = `${childId}/${wordId}/${fileName}`
+        const storagePath = `${user.id}/${childId}/${wordId}/${fileName}`
 
         // Upload to Supabase Storage
         const { error: uploadError } = await supabase.storage
