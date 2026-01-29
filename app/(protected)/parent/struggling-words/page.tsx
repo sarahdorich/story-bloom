@@ -7,6 +7,7 @@ import { useChild } from '../../ProtectedLayoutClient'
 import { useStrugglingWords } from '@/lib/hooks/useStrugglingWords'
 import { useAppSettings } from '@/lib/hooks/useAppSettings'
 import { Button, Input, Card, TextArea, NumberInput } from '@/components/ui'
+import { VoiceRecordButton } from '@/components/VoiceRecordButton'
 import { MASTERY_STAGE_INFO, type StrugglingWord, type WordMasteryStage } from '@/lib/types'
 
 type TabFilter = 'all' | WordMasteryStage
@@ -40,6 +41,32 @@ export default function ParentStrugglingWordsPage() {
 
   // Word to delete
   const [deletingWordId, setDeletingWordId] = useState<string | null>(null)
+
+  // Track local audio changes for immediate UI update
+  const [localAudioUpdates, setLocalAudioUpdates] = useState<
+    Record<string, { url: string | null; storagePath: string | null }>
+  >({})
+
+  // Handle audio change from VoiceRecordButton
+  const handleAudioChange = (
+    wordId: string,
+    audioUrl: string | null,
+    storagePath: string | null
+  ) => {
+    setLocalAudioUpdates((prev) => ({
+      ...prev,
+      [wordId]: { url: audioUrl, storagePath },
+    }))
+  }
+
+  // Get the current audio URL for a word (local update takes precedence)
+  const getWordAudioUrl = (word: StrugglingWord) => {
+    return localAudioUpdates[word.id]?.url ?? word.parent_audio_url
+  }
+
+  const getWordStoragePath = (word: StrugglingWord) => {
+    return localAudioUpdates[word.id]?.storagePath ?? word.parent_audio_storage_path
+  }
 
   // Filter words based on active tab
   const filteredWords = activeTab === 'all'
@@ -293,6 +320,7 @@ said`}
                   <th className="pb-2 pr-4">Stage</th>
                   <th className="pb-2 pr-4">Progress</th>
                   <th className="pb-2 pr-4">Source</th>
+                  <th className="pb-2 pr-4">Voice</th>
                   <th className="pb-2 pr-4">Added</th>
                   <th className="pb-2"></th>
                 </tr>
@@ -314,6 +342,18 @@ said`}
                       {word.source === 'manual' && 'Added manually'}
                       {word.source === 'sentence_shenanigans' && 'From practice'}
                       {word.source === 'word_quest' && 'From Word Quest'}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <VoiceRecordButton
+                        wordId={word.id}
+                        childId={selectedChild.id}
+                        word={word.word}
+                        currentAudioUrl={getWordAudioUrl(word)}
+                        currentStoragePath={getWordStoragePath(word)}
+                        onAudioChange={(url, path) =>
+                          handleAudioChange(word.id, url, path)
+                        }
+                      />
                     </td>
                     <td className="py-3 pr-4 text-gray-500">
                       {new Date(word.created_at).toLocaleDateString()}

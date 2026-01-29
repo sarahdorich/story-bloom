@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSpeechSynthesis } from '@/lib/hooks/useSpeechSynthesis'
 import { Button } from '@/components/ui'
 import type { StrugglingWord, Pet, PetType } from '@/lib/types'
@@ -17,12 +17,64 @@ export function WordCoach({ word, onComplete, onSkip, buddyPet }: WordCoachProps
   const [timesHeard, setTimesHeard] = useState(0)
   const [currentSyllableIndex, setCurrentSyllableIndex] = useState(-1)
   const [isPlayingSequence, setIsPlayingSequence] = useState(false)
+  const [audioSource, setAudioSource] = useState<'parent' | 'tts'>('tts')
+
+  const parentAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const { speak, isSpeaking, stop } = useSpeechSynthesis({
     petType: buddyPet?.pet_type as PetType | undefined,
   })
 
   const syllables = word.syllable_breakdown || [word.word]
+  const hasParentAudio = !!word.parent_audio_url
+
+  // Play parent's recorded audio
+  const playParentAudio = useCallback((): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (!word.parent_audio_url) {
+        reject(new Error('No parent audio'))
+        return
+      }
+
+      if (!parentAudioRef.current) {
+        parentAudioRef.current = new Audio()
+      }
+
+      const audio = parentAudioRef.current
+      audio.src = word.parent_audio_url
+
+      const handleEnded = () => {
+        audio.removeEventListener('ended', handleEnded)
+        audio.removeEventListener('error', handleError)
+        resolve()
+      }
+
+      const handleError = () => {
+        audio.removeEventListener('ended', handleEnded)
+        audio.removeEventListener('error', handleError)
+        reject(new Error('Audio playback failed'))
+      }
+
+      audio.addEventListener('ended', handleEnded)
+      audio.addEventListener('error', handleError)
+
+      audio.play().catch((err) => {
+        audio.removeEventListener('ended', handleEnded)
+        audio.removeEventListener('error', handleError)
+        reject(err)
+      })
+    })
+  }, [word.parent_audio_url])
+
+  // Cleanup parent audio on unmount
+  useEffect(() => {
+    return () => {
+      if (parentAudioRef.current) {
+        parentAudioRef.current.pause()
+        parentAudioRef.current = null
+      }
+    }
+  }, [])
 
   // Play individual syllable with highlight
   const playSyllableWithDelay = useCallback(
@@ -45,6 +97,23 @@ export function WordCoach({ word, onComplete, onSkip, buddyPet }: WordCoachProps
     setIsPlayingSequence(true)
     stop() // Cancel any ongoing speech
 
+    // Try parent audio first if available
+    if (word.parent_audio_url) {
+      try {
+        setAudioSource('parent')
+        await playParentAudio()
+        setTimesHeard((prev) => prev + 1)
+        setIsPlayingSequence(false)
+        return
+      } catch {
+        // Fall back to TTS if parent audio fails
+        console.warn('Parent audio failed, falling back to TTS')
+      }
+    }
+
+    // Use TTS (original behavior)
+    setAudioSource('tts')
+
     // Play each syllable with highlight
     for (let i = 0; i < syllables.length; i++) {
       await playSyllableWithDelay(i)
@@ -62,7 +131,7 @@ export function WordCoach({ word, onComplete, onSkip, buddyPet }: WordCoachProps
 
     setIsPlayingSequence(false)
     setTimesHeard((prev) => prev + 1)
-  }, [syllables, word.word, speak, stop, playSyllableWithDelay, isPlayingSequence])
+  }, [syllables, word.word, word.parent_audio_url, speak, stop, playSyllableWithDelay, playParentAudio, isPlayingSequence])
 
   // Auto-play on mount
   useEffect(() => {
@@ -116,6 +185,14 @@ export function WordCoach({ word, onComplete, onSkip, buddyPet }: WordCoachProps
             <span className={`text-2xl ${isPlayingSequence ? 'animate-pulse' : ''}`}>🔊</span>
             {timesHeard === 0 ? 'Hear it' : 'Hear again'}
           </button>
+          {/* Show audio source indicator */}
+          {hasParentAudio && (
+            <p className="text-sm text-purple-500 mt-2">
+              {isPlayingSequence && audioSource === 'parent'
+                ? "Playing your parent's voice..."
+                : "Your parent recorded this word for you!"}
+            </p>
+          )}
         </div>
 
         {/* Syllable breakdown */}
