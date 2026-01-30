@@ -94,6 +94,8 @@ export function useSpeechRecognition(
   const isListeningIntentRef = useRef(false)
   // Track accumulated final transcript for continuous mode (avoids stale closure issues)
   const finalTranscriptRef = useRef('')
+  // Timeout to auto-stop listening if no result is received
+  const listeningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     // Access the Web Speech API from window
@@ -126,9 +128,28 @@ export function useSpeechRecognition(
         setStatus('listening')
         setError(null)
         abortRetryCountRef.current = 0
+
+        // Auto-stop listening after 8 seconds if no result (prevents infinite blinking mic)
+        if (!optionsRef.current.continuous) {
+          if (listeningTimeoutRef.current) clearTimeout(listeningTimeoutRef.current)
+          listeningTimeoutRef.current = setTimeout(() => {
+            if (isListeningIntentRef.current) {
+              isListeningIntentRef.current = false
+              recognition.stop()
+              setError("I didn't hear anything. Try tapping the mic and saying the word again!")
+              setStatus('idle')
+            }
+          }, 8000)
+        }
       }
 
       recognition.onresult = (event: ISpeechRecognitionEvent) => {
+        // Clear the listening timeout since we got a result
+        if (listeningTimeoutRef.current) {
+          clearTimeout(listeningTimeoutRef.current)
+          listeningTimeoutRef.current = null
+        }
+
         const isContinuousMode = optionsRef.current.continuous
 
         if (isContinuousMode) {
@@ -223,6 +244,7 @@ export function useSpeechRecognition(
 
     return () => {
       isListeningIntentRef.current = false
+      if (listeningTimeoutRef.current) clearTimeout(listeningTimeoutRef.current)
       recognitionRef.current?.abort()
     }
   }, [])
@@ -247,6 +269,10 @@ export function useSpeechRecognition(
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
       isListeningIntentRef.current = false
+      if (listeningTimeoutRef.current) {
+        clearTimeout(listeningTimeoutRef.current)
+        listeningTimeoutRef.current = null
+      }
       recognitionRef.current.stop()
       setStatus('idle')
     }
