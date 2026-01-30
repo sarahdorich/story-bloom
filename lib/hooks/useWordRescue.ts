@@ -139,8 +139,9 @@ export function useWordRescue({ childId }: UseWordRescueOptions): UseWordRescueR
         }
 
         return result
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to check word')
+      } catch {
+        // Don't set fatal error for transient network failures during word checks.
+        // Return a non-fatal failure so the game can continue.
         return null
       }
     },

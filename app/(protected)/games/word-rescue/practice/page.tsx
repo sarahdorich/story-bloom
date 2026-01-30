@@ -28,6 +28,7 @@ export default function WordRescuePracticePage() {
   const [usedCoachForCurrentWord, setUsedCoachForCurrentWord] = useState(false)
   const [lastAttemptCorrect, setLastAttemptCorrect] = useState<boolean | null>(null)
   const [needsReset, setNeedsReset] = useState(false)
+  const [checkError, setCheckError] = useState(false)
 
   const {
     words,
@@ -49,7 +50,15 @@ export default function WordRescuePracticePage() {
     async (spoken: string) => {
       if (!currentWord) return
 
+      setCheckError(false)
       const result = await checkWord(spoken, usedCoachForCurrentWord)
+
+      if (!result) {
+        // Network error - let the child try again without killing the session
+        setCheckError(true)
+        setNeedsReset(true)
+        return
+      }
 
       if (result) {
         setLastAttemptCorrect(result.correct)
@@ -109,6 +118,7 @@ export default function WordRescuePracticePage() {
     setLastAttemptCorrect(null)
     setLastResult(null)
     setNeedsReset(false)
+    setCheckError(false)
     resetTranscript()
   }, [currentWordIndex, resetTranscript])
 
@@ -237,13 +247,13 @@ export default function WordRescuePracticePage() {
     )
   }
 
-  // Error state
+  // Error state (session-level errors like failed to start)
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <Card className="p-6 max-w-md mx-auto">
           <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => router.push('/games/word-rescue')}>Go Back</Button>
+          <Button onClick={() => router.push('/games')}>Go Back</Button>
         </Card>
       </div>
     )
@@ -304,6 +314,7 @@ export default function WordRescuePracticePage() {
           onNeedHelp={handleNeedHelp}
           onSkip={handleSkip}
           lastAttemptCorrect={lastAttemptCorrect}
+          checkError={checkError}
         />
       )}
 

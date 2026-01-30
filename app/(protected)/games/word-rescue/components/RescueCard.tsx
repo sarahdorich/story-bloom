@@ -10,6 +10,7 @@ interface RescueCardProps {
   onNeedHelp: () => void
   onSkip: () => void
   lastAttemptCorrect?: boolean | null
+  checkError?: boolean
 }
 
 export function RescueCard({
@@ -19,6 +20,7 @@ export function RescueCard({
   onNeedHelp,
   onSkip,
   lastAttemptCorrect,
+  checkError,
 }: RescueCardProps) {
   const stageInfo = MASTERY_STAGE_INFO[word.current_stage]
 
@@ -54,6 +56,11 @@ export function RescueCard({
         )}
         {lastAttemptCorrect === false && (
           <p className="text-orange-500 font-medium">Let&apos;s try again!</p>
+        )}
+        {checkError && (
+          <p className="text-red-500 font-medium text-sm">
+            Oops, something went wrong. Try again!
+          </p>
         )}
       </div>
 
